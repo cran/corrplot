@@ -16,7 +16,10 @@ A visualization of a correlation matrix.
 \description{
 A graphical display of a correlation matrix, test for correlation, and other visualization methods about association and correlation. The details of graph are paid great attention to.
 
-\code{corrplot.circle}, \code{corrplot.square}, \code{corrplot.ellipse}, \code{corrplot.number}, \code{corrplot.pie}, \code{corrplot.shade}, and \code{corrplot.color} are convenience wrappers of \code{corrplot} that take the same arguments as the corresponding option it replaces such as circle, ellipse etc. The \code{corrplot} function is more flexible than the wrappers.
+\code{corrplot.circle}, \code{corrplot.square}, \code{corrplot.ellipse}, \code{corrplot.number},  
+\code{corrplot.pie}, \code{corrplot.shade}, and \code{corrplot.color} are convenience wrappers of 
+\code{corrplot} that take the same arguments as the corresponding option it replaces such 
+as circle, ellipse etc. The \code{corrplot} function is more flexible than the wrappers.
 
 \code{corrplot.mtest} function is also a wrapper of \code{corrplot}, however it can calculate correlation (input parameter \code{corr}), p-value (input parameter \code{p.mat}) and  confidence interval (input parameter \code{low.mat} and \code{upp.mat}) from original data.frame or matrix (input parameter \code{dat}) automatically, while \code{corrplot} function need more input parameters because it does not support input parameter \code{dat}. Consequently, \code{corrplot.mtest} function is strongly recommended if you want to visualize the result of test for correlation.
 }
@@ -27,13 +30,14 @@ corrplot(corr, method = c("circle", "square", "ellipse", "number",
     order = c("original", "alphabet", "PCA", "hclust"),
     hclust.method = c("complete", "ward", "single", "average", 
     	               "mcquitty", "median", "centroid"),
-
+	rect.hc = NA, rect.col="black", rect.lwd = 2,
+	
     col = colorRampPalette(c("#67001F", "#B2182B", "#D6604D", "#F4A582", 
 	    "#FDDBC7", "#F7F7F7", "#D1E5F0", "#92C5DE", 
 	    "#4393C3", "#2166AC", "#053061"))(200),
              
     outline = FALSE, cex = 1, title = "", bg = "white",
-    addcolorkey = TRUE, colorkey=c("-1to1","min2max"),
+    addcolorkey = TRUE, colorkey=c("min2max", "-1to1"),
     cex.col.num = 0.8, mar = c(0,0,2,0),
     			
     addtextlabel = TRUE, pos.text = c("sides","diag"), col.text = "red",
@@ -86,6 +90,20 @@ the ordering method of the correlation matrix, need square matrix.
   \item{hclust.method}{
 the agglomeration method to be used when \code{order} is \code{\link{hclust}}. This should be one of \code{"ward"}, \code{"single"}, \code{"complete"}, \code{"average"}, \code{"mcquitty"}, \code{"median"} or \code{"centroid"}.
 
+}
+
+  \item{rect.hc}{
+integer, the numer of rectangles drawed on the graph according to the hierarchical cluster, 
+only valid when \code{order} is \code{hclust}. 
+}
+
+  \item{rect.col}{
+color for rectangle border(s), only valid when \code{rect.hc} is not \code{NA}.
+}
+
+
+  \item{rect.lwd}{
+line width for borders for rectangle border(s), only valid when \code{rect.hc} is not \code{NA}.
 }
 
   \item{col}{
@@ -192,9 +210,16 @@ extra parameters.
 }
 }
 
+\value{
+(Invisibly) returns a single permutation vector.
+}
+
 \details{
-\code{method} shoud be \code{circle} or \code{square} if draw confidence interval (\code{plotConf = TRUE}).
-\code{Cairo} package is strongly recommended to produce high-quality PNG, JPEG, TIFF bitmap files, especially for that \code{method} is \code{circle}, \code{ellipse} or \code{pie}.   
+\code{method} shoud be \code{circle} or \code{square} if draw confidence 
+interval (\code{plotConf = TRUE}).
+\code{Cairo} and \code{cairoDevice} package is strongly recommended to produce high-quality PNG, 
+JPEG, TIFF bitmap files, especially for that \code{method} is \code{circle}, 
+\code{ellipse} or \code{pie}.   
 }
 
 
@@ -232,28 +257,36 @@ corrplot(corr, method="circle", order = "PCA")
 corrplot(corr, method="square", order="hclust", type="upper", diag=FALSE, pos.text="diag")
 ##same as corrplot.square(corr, order="hclust", type="upper", diag=FALSE, pos.text="diag")
 
-corrplot(corr, method="shade", order="PCA", shade.method = "negtive", col.grid="white")
-##same as corrplot.shade(corr,order="PCA", shade.method = "negtive", col.grid="white")
+corrplot(corr, order="hclust", rect.hc = 2)
+corrplot(corr, order="hclust", rect.hc = 3, rect.col = "red")
+corrplot(corr, order="hclust", rect.hc = 4, rect.col = "yellow")
 
-corrplot(corr, method="ellipse", order="PCA", colorkey = "min2max", type="lower", pos.text="diag")
-##same as corrplot.ellipse(corr, order="PCA", colorkey = "min2max", type="lower", pos.text="diag")
 
-corrplot(corr, method="number", order="PCA")
-##same as corrplot.number(corr, order="PCA")
+corrplot(corr, order="hclust", hclust.method="ward", rect.hc = 3) ## same as:
+corrplot(corr, order="hclust", hclust.method="ward")
+corr.rect(c(5,2,4))
 
-corrplot(corr, method="color", order="alphabet", col.grid="white")
-##same as corrplot.color(corr, order="alphabet", col.grid="white")
+corrplot.shade(corr, order="PCA", shade.method = "negtive", col.grid="white")
+corrplot.shade(corr, order="PCA", shade.method = "positive", col.grid="white")
+corrplot.shade(corr, order="PCA", shade.method = "all", col.grid="white")
 
-corrplot(corr, method="pie", order="hclust", hclust.method="median")
-##same as corrplot.pie(corr, order="hclust", hclust.method="median")
+corrplot.ellipse(corr, order="PCA", colorkey = "-1to1", type="lower", pos.text="diag")
+
+corrplot.number(corr, order="PCA")
+
+corrplot.pie(corr, order="hclust", hclust.method="median")
+
+corrplot.color(corr, order="alphabet", col.grid="white")
+
 
 ## like Chinese wiqi
 corrplot(corr, bg="gold2", col = c("white","black"), order="PCA", outline=TRUE, addcolorkey=FALSE)
+
 ## note the parameter outline
 corrplot(corr, col = c("white","black"), order="PCA",  addcolorkey=FALSE, outline=TRUE)
 
 ## visualize the result of test for correlation
-corrplot.mtest(dat=mtcars)
+corrplot.mtest(dat=mtcars, order="hclust", rect.hc=3)
 corrplot.mtest(dat=mtcars, plotC=TRUE)
 corrplot.mtest(dat=mtcars, method="square", non_corr.method = "blank", addgrid=FALSE)
 corrplot.mtest(dat=mtcars, plotC=TRUE, method="square", addgrid=FALSE)

@@ -18,19 +18,21 @@
 #' @param col.shade,
 #' @param ... extra parameters, currenlty ignored
 #  last modified by Taiyun 2009-8-27 0:20:11
+#  last modified by Taiyun 2010-4-15 0:20:11
 corrplot <- function(corr, method = c("circle", "square", "ellipse", "number", 
                                 "pie", "shade", "color"),
 		type = c("full", "lower", "upper"), 
 		order = c("original", "alphabet", "PCA", "hclust"),
 		hclust.method = c("complete", "ward", "single", "average", 
-                       "mcquitty", "median", "centroid"),
+                       "mcquitty", "median", "centroid"), 
+		rect.hc = NA, rect.col="black", rect.lwd = 2,
 
 		col = colorRampPalette(c("#67001F", "#B2182B", "#D6604D", "#F4A582", 
 				"#FDDBC7", "#F7F7F7", "#D1E5F0", "#92C5DE", 
 				"#4393C3", "#2166AC", "#053061"))(200),
              
 		outline = FALSE, cex = 1, title = "", bg = "white",
-		addcolorkey = TRUE, colorkey=c("-1to1","min2max"),
+		addcolorkey = TRUE, colorkey=c("min2max", "-1to1"),
 		cex.col.num = 0.8, mar = c(0,0,2,0),
                         
 		addtextlabel = TRUE, pos.text = c("sides","diag"), col.text = "red",
@@ -81,11 +83,13 @@ corrplot <- function(corr, method = c("circle", "square", "ellipse", "number",
         ## reorder the variables using hclhust
         if(order == "hclust"){
         	ord <- order.dendrogram(as.dendrogram(hclust(as.dist(1-corr), 
-        	       method = hclust.method, ...)))
+					method = hclust.method, ...)))
         }   
         
         return(ord)
     }
+	
+	ord <- NA
     if(!order=="original"){
         ord <- myorder(corr, order=order)
         corr <- corr[ord,ord]
@@ -173,7 +177,7 @@ corrplot <- function(corr, method = c("circle", "square", "ellipse", "number",
     ## background color
     symbols(mypos, add = TRUE, inches = FALSE, 
             squares = rep(1, len.mycorr), bg = bg, fg = bg)
-    
+    	
     ## circle
     if(method=="circle"){
     	symbols(mypos, add = TRUE,  inches = FALSE, bg = col.fill, 
@@ -223,37 +227,37 @@ corrplot <- function(corr, method = c("circle", "square", "ellipse", "number",
     ## shade
     if(method=="shade"){
     	shade.method <- match.arg(shade.method)
-    	symbols(mypos, add = TRUE, inches = FALSE, 
-         squares = rep(1, len.mycorr), bg = col.fill, fg = "white")
-      shade.dat <- function(w){
-      	x <- w[1];  y <- w[2];  rho <- w[3] 
-      	x1 <- x - 0.5
-      	x2 <- x + 0.5
-      	y1 <- y - 0.5
-      	y2 <- y + 0.5
-      	dat <- NA
+    	symbols(mypos, add = TRUE, inches = FALSE, squares = rep(1, len.mycorr), 
+				bg = col.fill, fg = "white")
+        shade.dat <- function(w){
+			x <- w[1];  y <- w[2];  rho <- w[3] 
+			x1 <- x - 0.5
+			x2 <- x + 0.5
+			y1 <- y - 0.5
+			y2 <- y + 0.5
+			dat <- NA
       	
-      	if(shade.method=="positive"||shade.method=="all"){
-      	  if(rho >0)
-      		  dat <- cbind(c(x1, x1, x), c(y, y1, y1),
-      		               c(x, x2, x2), c(y2, y2 ,y), nrow = 3)
-      	}
-      	if(shade.method=="negtive"||shade.method=="all"){
-      	  if(rho <0)
-      		  dat <- cbind(c(x1, x1, x), c(y, y2, y2),
-      		               c(x, x2, x2), c(y1, y1 ,y), nrow = 3)
-      	}
-      	return(dat)
+			if(shade.method=="positive"||shade.method=="all"){
+				if(rho >0)
+					dat <- cbind(c(x1, x1, x), c(y, y1, y1),
+      		               c(x, x2, x2), c(y2, y2 ,y))
+			}
+			if(shade.method=="negtive"||shade.method=="all"){
+				if(rho <0)
+					dat <- cbind(c(x1, x1, x), c(y, y2, y2),
+      		               c(x, x2, x2), c(y1, y1 ,y))
+			}
+			
+      	return(t(dat))
       }
-      
-      myShade.dat <- apply(cbind(mypos, mycorr), 1, shade.dat)
-      for(i in 1:len.mycorr){
-    			if(all(!is.na(myShade.dat[[i]])))
-    			segments(myShade.dat[[i]][,1], myShade.dat[[i]][,2], 
-    			         myShade.dat[[i]][,3], myShade.dat[[i]][,4], 
-    			         col = col.shade, lwd = lwd.shade)
-    	}
-    }
+    
+	pos_corr <- rbind(cbind(mypos, mycorr))
+	pos_corr2 <- split(pos_corr, 1:nrow(pos_corr))
+    myShade.dat <- matrix(na.omit(unlist(lapply(pos_corr2,  shade.dat))),byrow=TRUE, ncol=4) 
+	segments(myShade.dat[,1], myShade.dat[,2], 
+    			myShade.dat[,3], myShade.dat[,4], 
+    			col = col.shade, lwd = lwd.shade)
+    } 
     
     ##square
     if(method=="square"){
@@ -261,13 +265,13 @@ corrplot <- function(corr, method = c("circle", "square", "ellipse", "number",
          squares = abs(mycorr)^0.5, bg = col.fill, fg = col.border)
     }
     
-    ##color
+    ##  color
     if(method=="color"){
     	symbols(mypos, add = TRUE, inches = FALSE, 
               squares = rep(1, len.mycorr), bg = col.fill, fg = col.fill)
     }
-    
-    
+	
+       
     if(addcolorkey){
     	min.corr <- round(min(corr, na.rm = TRUE),2)
     	tmp <- corr
@@ -386,4 +390,17 @@ corrplot <- function(corr, method = c("circle", "square", "ellipse", "number",
     	  symbols(mypos, add=TRUE, inches = FALSE,  bg = NA,
     	     squares = rep(1, len.mycorr), fg = col.grid)
     }
+	
+	##  draws rectangles 
+	if(!is.na(rect.hc)){
+		tree <- hclust(as.dist(1-corr), method = hclust.method)
+		hc <- cutree(tree, k = rect.hc)
+		clustab <- table(hc)[unique(hc[tree$order])]
+		cu <- c(0, cumsum(clustab))
+		mat <- cbind(cu[-(rect.hc + 1)] + 0.5, n - cu[-(rect.hc + 1)] + 0.5, 
+		              cu[-1] + 0.5, n - cu[-1] + 0.5)
+		rect(mat[,1], mat[,2], mat[,3], mat[,4], border = rect.col, lwd = rect.lwd)
+	}
+	
+	invisible(ord)
 } ## end
