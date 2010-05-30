@@ -8,206 +8,274 @@
 \alias{corrplot.shade}
 \alias{corrplot.pie}
 \alias{corrplot.color}
-\alias{corrplot.mtest}
 
 \title{
 A visualization of a correlation matrix.
 }
 \description{
-A graphical display of a correlation matrix, test for correlation, and other visualization methods about association and correlation. The details of graph are paid great attention to.
+A graphical display of a correlation matrix, confidence interval. 
+The details of graph are paid great attention to.
 
-\code{corrplot.circle}, \code{corrplot.square}, \code{corrplot.ellipse}, \code{corrplot.number},  
-\code{corrplot.pie}, \code{corrplot.shade}, and \code{corrplot.color} are convenience wrappers of 
-\code{corrplot} that take the same arguments as the corresponding option it replaces such 
-as circle, ellipse etc. The \code{corrplot} function is more flexible than the wrappers.
+\code{corrplot.circle}, \code{corrplot.square}, \code{corrplot.ellipse},
+\code{corrplot.number},
+\code{corrplot.pie}, \code{corrplot.shade}, and \code{corrplot.color} are
+convenience wrappers of \code{corrplot} that take the same arguments as the
+corresponding option it replaces such as circle, ellipse etc.
 
-\code{corrplot.mtest} function is also a wrapper of \code{corrplot}, however it can calculate correlation (input parameter \code{corr}), p-value (input parameter \code{p.mat}) and  confidence interval (input parameter \code{low.mat} and \code{upp.mat}) from original data.frame or matrix (input parameter \code{dat}) automatically, while \code{corrplot} function need more input parameters because it does not support input parameter \code{dat}. Consequently, \code{corrplot.mtest} function is strongly recommended if you want to visualize the result of test for correlation.
 }
 \usage{
-corrplot(corr, method = c("circle", "square", "ellipse", "number", 
-				"pie", "shade", "color"),
-    type = c("full", "lower", "upper"), 
-    order = c("original", "alphabet", "PCA", "hclust"),
-    hclust.method = c("complete", "ward", "single", "average", 
-    	               "mcquitty", "median", "centroid"),
-	rect.hc = NA, rect.col="black", rect.lwd = 2,
-	
-    col = colorRampPalette(c("#67001F", "#B2182B", "#D6604D", "#F4A582", 
-	    "#FDDBC7", "#F7F7F7", "#D1E5F0", "#92C5DE", 
-	    "#4393C3", "#2166AC", "#053061"))(200),
-             
-    outline = FALSE, cex = 1, title = "", bg = "white",
-    addcolorkey = TRUE, colorkey=c("min2max", "-1to1"),
-    cex.col.num = 0.8, mar = c(0,0,2,0),
-    			
-    addtextlabel = TRUE, pos.text = c("sides","diag"), col.text = "red",
-    			
-    shade.method = c("negtive", "positive", "all"),
-    lwd.shade = 1, col.shade = "white", 
-    			
-    			
-    addgrid = TRUE, col.grid = "gray", diag = TRUE,   
-    addnum = FALSE,  col.num = NULL, 
-    			
-    corr.mtest = FALSE, p.mat = NULL, conf.level = 0.95,
-    non_corr.method = c("pch","blank"),
-    pch = 4, col.pch = "red",  cex.pch = 1,
-    plotConf = FALSE, low.mat = NULL, upp.mat = NULL)
+corrplot(corr,
+	method = c("circle", "square", "ellipse", "number", "shade", "color", "pie"),
+	type = c("full", "lower", "upper"),	col = NULL, bg = "white", title = "",
+	diag = TRUE, outline = FALSE, mar = c(0,0,0,0),
+	addgrid.col = "gray", addnum.col= NULL,
+
+	order = c("original", "PCA", "hclust", "alphabet"),
+	hclust.method = c("complete", "ward", "single", "average",
+			"mcquitty", "median", "centroid"),
 		
+	addrect = NULL, rect.col="black", rect.lwd = 2,
+
+	addtextlabel = c("lt","ld","td","d", "no"), tl.cex = 1,
+	tl.col = "red", tl.offset = 0.4,
+
+	addcolorlabel = c("right", "bottom","no"), cl.range=c( "-1to1","min2max"),
+	cl.length=11, cl.cex =0.8, cl.ratio = 0.15, cl.align.text="c",cl.offset=0.5,
+
+	addshade = c("negtive", "positive", "all"),
+	shade.lwd = 1, shade.col = "white",
+
+	p.mat = NULL, sig.level = 0.05,
+	insig = c("pch","blank", "no"),
+	pch = 4, pch.col = "black", pch.cex = 3,
+
+	plotCI = c("no","square", "circle", "rect"),
+	lowCI.mat = NULL, uppCI.mat = NULL)
+	
 corrplot.circle(corr, ...)
+corrplot.square(corr, ...)
 corrplot.ellipse(corr,...)
 corrplot.number(corr, ...)
+corrplot.shade(corr, ...)
 corrplot.pie(corr, ...)
-corrplot.shade(corr, ...)
-corrplot.square(corr, ...)
-corrplot.shade(corr, ...)
-corrplot.mtest(dat = NULL, corr = NULL, p.mat = NULL, conf.level = 0.95,
-	plotConf = FALSE, low.mat = NULL, upp.mat = NULL, 
-    non_corr.method = c("pch","blank"), method = c("circle","square"),
-    pch = 4, col.pch = "black",...)
+corrplot.color(corr, ...)
 }
 \arguments{
   \item{corr}{
-the correlation matrix, must be square if \code{order} is not \code{"original"} (default).
+the correlation matrix, must be square if \code{order} is not \code{"original"}.
 }
   \item{method}{
-the visualization method of correlation matrix to be used. Currently, it support seven methods, named \code{"circle"}, \code{"square"}, \code{"ellipse"}, \code{"number"}, \code{"pie"}, \code{"shade"} and \code{"color"}  for function \code{corrplot}, and \code{"circle"}, \code{"square"} for function \code{corrplot.mtest}.
+character, the visualization method of correlation matrix to be used. Currently, it supports seven methods, named \code{"circle"} (default), \code{"square"}, \code{"ellipse"}, \code{"number"}, \code{"pie"}, \code{"shade"} and \code{"color"}. 
+
+The areas of circles or squares show the absolute value of corresponding correlation coefficients. Method \code{"pie"} and \code{"shade"} came from Michael Friendly's job (with some adjustment 
+about the shade added on), and \code{"ellipse"} came from D.J. Murdoch and E.D. Chow's job, see in section References.
 }
   \item{type}{
-plot "full" matrix or just "upper" or "lower" triangular part of it.
-}
-
-  \item{order}{
-the ordering method of the correlation matrix, need square matrix.
-	\itemize{
-		\item \code{"original"} for orginal order.
-		\item \code{"alphabet"} for alphabetical order.
-		\item \code{"PCA"} for principal component analysis.
-		\item \code{"hclust"} for hierarchical clustering.		
-	}
-}
-
-  \item{hclust.method}{
-the agglomeration method to be used when \code{order} is \code{\link{hclust}}. This should be one of \code{"ward"}, \code{"single"}, \code{"complete"}, \code{"average"}, \code{"mcquitty"}, \code{"median"} or \code{"centroid"}.
-
-}
-
-  \item{rect.hc}{
-integer, the numer of rectangles drawed on the graph according to the hierarchical cluster, 
-only valid when \code{order} is \code{hclust}. 
-}
-
-  \item{rect.col}{
-color for rectangle border(s), only valid when \code{rect.hc} is not \code{NA}.
-}
-
-
-  \item{rect.lwd}{
-line width for borders for rectangle border(s), only valid when \code{rect.hc} is not \code{NA}.
+character, \code{"full"} (default), \code{"upper"} or \code{"lower"}, display full matrix,
+lower triangular or upper triangular of it.
 }
 
   \item{col}{
-vector(any length), the color of glyphs.
-}
-  \item{outline}{
-logical, whether plot outline of circles, square and ellipse or not.
-}
-  \item{cex}{
-numeric, for the text label (variable names).
-}
-  \item{title}{
-title of the graph.
+vector, the color of glyphs for correlation coefficients or confidence interval's bounds, 
+and it is distributed uniformly from -1 to 1. 
 }
 
   \item{bg}{
 the background color.
 }
 
-  \item{addcolorkey}{
-whether add colorkey or not.
+  \item{title}{
+character, title of the graph.
 }
-  \item{colorkey}{
-style of colorkey, must be \code{"-1to1"} or \code{"min2max"}.
+
+
+  \item{diag}{
+logical, whether display the correlation coefficients on the principal diagonal.
 }
-  \item{cex.col.num}{
-cex of the number in colorkey. 
+
+  \item{outline}{
+logical, whether plot outline of circles, square and ellipse.
 }
+
   \item{mar}{
 see \code{\link{par}}.
+
+
 }
+
+
+  \item{addgrid.col}{
+the color of grid, if \code{NULL}, don't add grid.
+}
+
+
+  \item{addnum.col}{
+color of coefficients added on the glyph circle, square, etc.), if \code{NULL}, add no coefficients. Note: the figures are expressed in terms of a percentage for spacesaving.
+}
+
+  \item{order}{
+character, the ordering method of the correlation matrix.
+	\itemize{
+		\item \code{"original"} for original order.
+		\item \code{"alphabet"} for alphabetical order.
+		\item \code{"PCA"} for principal component analysis.
+		\item \code{"hclust"} for hierarchical clustering.
+	}
+}
+
+  \item{hclust.method}{
+character, the agglomeration method to be used when \code{order} is \code{\link{hclust}}. This should be one of \code{"ward"}, \code{"single"}, \code{"complete"}, \code{"average"}, \code{"mcquitty"}, \code{"median"} or \code{"centroid"}.
+
+}
+
+  \item{addrect}{
+integer, the number of rectangles draws on the graph according to the hierarchical cluster,
+only valid when \code{order} is \code{hclust}. If its value is \code{NULL} (default), then
+add no rectangles.
+}
+
+  \item{rect.col}{
+color for rectangle border(s), only valid when \code{addrect} is not \code{NULL}.
+}
+
+
+  \item{rect.lwd}{
+numeric, line width for borders for rectangle border(s), only valid
+when \code{addrect} is not \code{NULL}.
+
+
+}
+
+
+
   \item{addtextlabel}{
-logical, whether add text label or not.
+character, \code{"lt"}, \code{"ld"}, \code{"td"}, or \code{"d"}, giving position of 
+text labels, \code{"lt"} means left and top, \code{"ld"} means left and diagonal(near), 
+\code{"td"} means top and diagonal(near), \code{"d"} means diagonal. If \code{"no"},
+do not add textlabel.
 }
-  \item{pos.text}{
-position of text labels, if \code{"sides"}, all the text labels will be plot on sides; if \code{"diag"} (only valid when \code{type} is \code{upper} or \code{lower}), a set of text labels will be plot near the principal diagonal.
+
+  \item{tl.cex}{
+numeric, for the text label (variable names).
 }
-  \item{col.text}{
+
+  \item{tl.col}{
 the color of text label.
 }
-  \item{shade.method}{
-shade method, only valid when \code{method} is \code{shade}. If \code{negative}, then the negtive correlation will be shaded; if \code{positive}, then the positive correlation will be shaded; If \code{all}, then all correlation will be shaded. Note: the angle of shade line is different, 45 degrees for positive and 135 degrees for negtive.
+
+  \item{tl.offset}{
+numeric, for text label, see \code{\link{text}}.
+
+
 }
-  \item{lwd.shade}{
-the line width of shade.
+
+
+
+  \item{addcolorlabel}{
+character, \code{"right"} (default), \code{"bottom"} or \code{"no"}, where to draw colorlabel. 
+If \code{"no"}, don't draw colorlabel.
 }
-  \item{col.shade}{
+  \item{cl.range}{
+character, \code{"-1to1"} (default) or \code{"min2max"}, style of colorlabel.
+}
+
+\item{cl.length}{
+integer, the number of number-text in colorlabel, passed to \code{\link{colorlegend}}.
+}
+
+\item{cl.cex}{
+cex of number-label in colorlabel,  passed to \code{\link{colorlegend}}.
+}
+
+\item{cl.ratio}{
+numeric, to justify the width of colorlabel, 0.1~0.2 is suggested.
+}
+
+\item{cl.align.text}{
+character, \code{"l"}, \code{"c"} (default) or \code{"r"}, for number-label in colorlabel, 
+\code{"l"} means left, \code{"c"} means center, and \code{"r"} means right.
+}
+
+\item{cl.offset}{
+numeric, for number-label in colorlabel, see \code{\link{text}}.
+
+
+}
+
+
+
+  \item{addshade}{
+character for shade style, \code{"negative"}, \code{"positive"} or \code{"all"}, 
+only valid when \code{method} is \code{"shade"}. If \code{"all"}, all
+correlation coefficients' glyph will be shaded; if \code{"positive"}, 
+only the positive will be shaded; if \code{"negative"}, only the negative 
+will be shaded. Note: the angle of shade line is different, 
+45 degrees for positive and 135 degrees for negative.
+}
+
+  \item{shade.lwd}{
+numeric, the line width of shade.
+}
+  \item{shade.col}{
 the color of shade line.
+
+
 }
 
-  \item{addgrid}{
-logical, whether add grid or not.
-}
-  \item{col.grid}{
-the color of grid.
-}
-  \item{diag}{
-logical, whether display the correlation of the principal diagonal.
-}
 
-  \item{addnum}{
-logical, whether to plot numerical correlations on glyphs. Note: the figures are expressed in terms of a percentage for spacesaving.
-}
-  \item{col.num}{
-col of numerical correlations.
-}
-  \item{corr.mtest}{
-logical, whether to visualize the result of test for correlation. Note: need input parameters \code{dat} (only supported by function \code{corrplot.mtest}) or \code{p.mat} if \code{TRUE}.
-}
+
   \item{p.mat}{
-matrix of p-value, function \code{corrplot.mtest} can also calculate it from input parameter \code{dat}.
+matrix of p-value, if \code{NULL}, arguments \code{sig.level}, \code{insig}, 
+\code{pch}, \code{pch.col}, \code{pch.cex} is invalid.
 }
-  \item{conf.level}{
-confidence level for the returned confidence interval (valid in function \code{corrplot.mtest()}) and calculating the level of significance.
+
+  \item{sig.level}{
+significant level,  if the p-value in \code{p-mat} is bigger than \code{sig.level}, then
+the corresponding correlation coefficient is regarded as insignificant.
 }
-  \item{non_corr.method}{
-the method to deal with the correlation whose p-value is less than level of significance (1-\code{conf.level}), if \code{"blank"}, wipe away the corresponding glyphs; if \code{"pch"}, add character on the corresponding glyphs.
+
+  \item{insig}{
+character, specialized insignificant correlation coefficients, \code{"pch"} (default), \code{"blank"}
+or \code{"no"}. If \code{"blank"}, wipe away the corresponding glyphs; if \code{"pch"}, 
+add characters (see \code{pch} for details) on 
+corresponding glyphs; if \code{"no"}, don't take any measures.
 }
   \item{pch}{
-plotting character for the correlation whose p-value is less than level of significance (only valid when \code{non_corr.method} is \code{pch}).
+add character on the glyphs of insignificant correlation coefficients(only valid when 
+\code{insig} is \code{"pch"}). See \code{\link{par}}.
 }
-  \item{col.pch}{
-the color of pch (only valid when \code{non_corr.method} is \code{pch}).
+  \item{pch.col}{
+the color of pch (only valid when \code{insig} is \code{"pch"}).
 }
-  \item{cex.pch}{
-the cex of pch (only valid when \code{non_corr.method} is \code{pch}).
-}
-  \item{plotConf}{
-logical, whether to plot confidence interval or not. Note: need input parameters \code{dat} (only supported by function \code{corrplot.mtest}) or \code{low.mat} and \code{upp.mat} if \code{TRUE}.
-}
-  \item{low.mat}{
-matrix of the lower bound of confidence interval, function \code{corrplot.mtest} can also calculate it from input parameter \code{dat} automatically.
-}
-  \item{upp.mat}{
-matrix of the upper bound of confidence interval, function \code{corrplot.mtest} can also calculate it from input parameter \code{dat} automatically.
+  \item{pch.cex}{
+the cex of pch (only valid when \code{insig} is \code{"pch"}).
+
+
 }
 
-  \item{dat}{
-original data.frame or matrix for function \code{corrplot.mtest},  \code{corrplot.mtest} can calculate correlation , p-value and confidence interval automatically from \code{dat}.
+
+  \item{plotCI}{
+character, method to plot confidence interval, if \code{"no"}, don't plot confidence interval. 
+If \code{"rect"}, plot rectangles whose upper side means upper bound, lower side means 
+lower bound, and correlation coefficients are also added on the rectangles. If \code{"circle"}, first plot a circle of the bigger absolute bound, then plot the smaller. Warning: if the 
+two bounds are the same sign, then the smaller circle will be wiped away, thus formed a ring. Method \code{"square"} is similar to \code{"circle"}. 
+
 }
+  \item{lowCI.mat}{
+matrix of the lower bound of confidence interval.
+}
+  \item{uppCI.mat}{
+matrix of the upper bound of confidence interval.
+
+
+}
+
 
   \item{\dots}{
-extra parameters.
+additional arguments for \code{corrplot}'s wrappers 
+(\code{corrplot.circle}, \code{corrplot.square}, etc.), passed to \code{corrplot}.
 }
+
 }
 
 \value{
@@ -215,11 +283,8 @@ extra parameters.
 }
 
 \details{
-\code{method} shoud be \code{circle} or \code{square} if draw confidence 
-interval (\code{plotConf = TRUE}).
-\code{Cairo} and \code{cairoDevice} package is strongly recommended to produce high-quality PNG, 
-JPEG, TIFF bitmap files, especially for that \code{method} is \code{circle}, 
-\code{ellipse} or \code{pie}.   
+\code{corrplot} function offers flexible ways to visualize correlation matrix, 
+lower and upper bound of confidence interval matrix. 
 }
 
 
@@ -233,15 +298,22 @@ D.J. Murdoch, E.D. Chow (1996).
 \emph{A graphical display of large correlation matrices}.
 The American Statistician, 50, 178--180.
 }
+
 \author{
-Taiyun Wei
+ Taiyun Wei
 }
+
 \note{
-Using circles or squares with different areas and colors to display a correlation matrix, test for correlation's p-values and confidence intervals is Taiyun Wei's pioneering work.
+	\code{Cairo} and \code{cairoDevice} package is strongly recommended to produce
+	high-quality PNG, JPEG, TIFF bitmap files, especially for that \code{method}
+	is \code{circle}, \code{ellipse} .
 }
 
 \seealso{
 The \code{plotcorr} function in the \code{ellipse} package and \code{corrgram} function in the \code{corrgram} package has some similarities.
+
+Package \code{seriation} offered more methods to reorder matrices, such as 
+ARSA, BBURCG, BBWRCG, MDS, TSP, Chen and so forth.
 }
 
 \examples{
@@ -251,50 +323,152 @@ data(mtcars)
 corr <- cor(mtcars)
 par(ask = TRUE)
 
-corrplot(corr, method="circle", order = "PCA")
-##same as corrplot.circle(corr, order = "PCA")
-
-corrplot(corr, method="square", order="hclust", type="upper", diag=FALSE, pos.text="diag")
-##same as corrplot.square(corr, order="hclust", type="upper", diag=FALSE, pos.text="diag")
-
-corrplot(corr, order="hclust", rect.hc = 2)
-corrplot(corr, order="hclust", rect.hc = 3, rect.col = "red")
-corrplot(corr, order="hclust", rect.hc = 4, rect.col = "yellow")
-
-
-corrplot(corr, order="hclust", hclust.method="ward", rect.hc = 3) ## same as:
-corrplot(corr, order="hclust", hclust.method="ward")
-corr.rect(c(5,2,4))
-
-corrplot.shade(corr, order="PCA", shade.method = "negtive", col.grid="white")
-corrplot.shade(corr, order="PCA", shade.method = "positive", col.grid="white")
-corrplot.shade(corr, order="PCA", shade.method = "all", col.grid="white")
-
-corrplot.ellipse(corr, order="PCA", colorkey = "-1to1", type="lower", pos.text="diag")
-
-corrplot.number(corr, order="PCA")
-
-corrplot.pie(corr, order="hclust", hclust.method="median")
-
-corrplot.color(corr, order="alphabet", col.grid="white")
+## different methods to display corr-matrix
+corrplot(corr, method="number", col="black", addcolorlabel="no")
+corrplot(corr, method="number")
+corrplot(corr)
+corrplot(corr, order="hclust")
+corrplot(corr, order ="PCA")
+corrplot(corr, method="square", order = "PCA")
+corrplot(corr, method="ellipse", order = "PCA")
+corrplot(corr, method="color", order = "PCA")
+corrplot(corr, method="shade", order = "PCA")
+corrplot(corr, method="pie", order = "PCA")
 
 
-## like Chinese wiqi
-corrplot(corr, bg="gold2", col = c("white","black"), order="PCA", outline=TRUE, addcolorkey=FALSE)
 
-## note the parameter outline
-corrplot(corr, col = c("white","black"), order="PCA",  addcolorkey=FALSE, outline=TRUE)
+## order is hclust and draw rectangles
+corrplot(corr, order="hclust", addrect = 2)
+corrplot(corr, order="hclust", addrect = 3, rect.col = "red")
+corrplot(corr, order="hclust", addrect = 4, rect.col = "blue")
+corrplot(corr, order="hclust", hclust.method="ward", addrect = 4)
 
-## visualize the result of test for correlation
-corrplot.mtest(dat=mtcars, order="hclust", rect.hc=3)
-corrplot.mtest(dat=mtcars, plotC=TRUE)
-corrplot.mtest(dat=mtcars, method="square", non_corr.method = "blank", addgrid=FALSE)
-corrplot.mtest(dat=mtcars, plotC=TRUE, method="square", addgrid=FALSE)
+
+
+## text-labels and plot type
+corrplot(corr, order="PCA", addtextlabel="d")
+corrplot(corr, order="PCA", diag=FALSE, addtextlabel="d")
+corrplot(corr, order="PCA", diag=FALSE, addtextlabel="d",cl.range="min2max")
+corrplot(corr, order="PCA", type="upper", addtextlabel="td")
+corrplot(corr, order="PCA", type="upper", diag=FALSE, addtextlabel="td")
+corrplot(corr, order="PCA", type="lower", addcolorlabel="b", addtextlabel="ld")
+corrplot(corr, order="PCA", type="lower", addcolorlabel="b", diag=FALSE, addtextlabel="ld")
+
+
+
+#### color-legend, corr-color, and background-color
+corrplot(corr, order="PCA", cl.ratio=0.1, cl.align="r", cl.offset=0)
+corrplot(corr, order="PCA", cl.ratio=0.15,cl.length=9)
+corrplot(corr, order="PCA", cl.ratio=0.2, cl.align="l")
+corrplot(corr, order="PCA", addcolorlabel="b")
+corrplot(corr, order="PCA", addcolorlabel="b",cl.range="min2max",addt="d")
+corrplot(corr, order="PCA", addcolorlabel="no")
+col1 <- rev(heat.colors(100))
+col2 <- colorRampPalette(c("red", "white", "blue"))
+col3 <- colorRampPalette(rev(c("#00007F", "blue", "#007FFF", "cyan",
+                     "white", "yellow", "#FF7F00", "red", "#7F0000")))
+col4 <- grey(10:1/10)
+wb <- c("white","black")
+corrplot(corr, order="PCA", col=col1)
+corrplot(corr, order="PCA", col=col2(100))
+corrplot(corr, order="PCA", col=col3(100))
+corrplot(corr, order="PCA", col=col4)
+
+corrplot(corr, col = wb, order="PCA", outline=TRUE, addcolorlabel="no")
+## like Chinese wiqi, suit for either on screen or white-black print.
+corrplot(corr, col = wb, bg="gold2",  order="PCA", addcolorlabel="no")
+
+
+
+## addshade, addgrid and addnum
+corrplot.shade(corr, order="PCA", addshade = "negtive", addgrid.col=NULL)
+corrplot.shade(corr, order="PCA", addshade = "positive", addgrid.col=NULL)
+corrplot.shade(corr, order="PCA", addshade = "all", addgrid.col=NULL)
+corrplot.color(corr, order="PCA", addgrid.col=NULL)
+corrplot.color(corr, order="PCA", addgrid.col="white")
+corrplot.color(corr, order="PCA", addgrid.col="white", addnum.col="grey10")
+
 
 ##the input matrix is not square
-corrplot(corr[1:8,], method="shade")
-corrplot(corr[1:8,], method="number",  type="upper",diag=FALSE, addgrid=TRUE, pos.text="diag")
-corrplot(corr[,1:8], method="number",  type="upper",diag=FALSE, addgrid=TRUE, pos.text="diag")
+corrplot(corr[1:8,])
+corrplot(corr[,1:8])
+
+
+
+cor.mtest <- function(mat, conf.level = 0.95){
+	mat <- as.matrix(mat)
+	n <- ncol(mat)
+	p.mat <- lowCI.mat <- uppCI.mat <- matrix(NA, n, n)
+	diag(p.mat) <- 0
+	diag(lowCI.mat) <- diag(uppCI.mat) <- 1
+	for(i in 1:(n-1)){
+		for(j in (i+1):n){
+			tmp <- cor.test(mat[,i], mat[,j], conf.level = conf.level)
+			p.mat[i,j] <- p.mat[j,i] <- tmp$p.value
+			lowCI.mat[i,j] <- lowCI.mat[j,i] <- tmp$conf.int[1]
+			uppCI.mat[i,j] <- uppCI.mat[j,i] <- tmp$conf.int[2]
+		}
+	}
+	return(list(p.mat, lowCI.mat, uppCI.mat))
+}
+
+res1 <- cor.mtest(mtcars,0.95)
+res2 <- cor.mtest(mtcars,0.99)
+
+
+## specialized the insignificant value according to the significant level
+corrplot(corr, p.mat = res1[[1]], sig.level=0.2)
+corrplot(corr, p.mat = res1[[1]], sig.level=0.05)
+corrplot(corr, p.mat = res1[[1]], sig.level=0.01)
+corrplot(corr, p.mat = res1[[1]], insig = "blank")
+corrplot(corr, p.mat = res1[[1]], order="hclust", insig = "blank", addrect=3)
+corrplot(corr, p.mat = res1[[1]], order="hclust", insig = "pch", addrect=3)
+
+
+
+## plot confidence interval(0.95), "square" method	
+corrplot(corr,low=res1[[2]], upp=res1[[3]],
+	plotC="circle", addg="grey20",addc="no")
+corrplot(corr, p.mat = res1[[1]],low=res1[[2]], upp=res1[[3]],
+	plotC="circle", addg="grey20",addc="no")
+corrplot(corr, low=res1[[2]], upp=res1[[3]], 
+	col=c("white","black"),bg="gold2",order="PCA",
+	plotCI="circle",addc="no",pch.col="red")
+corrplot(corr, p.mat = res1[[1]], low=res1[[2]], upp=res1[[3]], 
+	col=c("white","black"),bg="gold2",order="PCA",
+	plotCI="circle",addc="no",pch.col="red")
+	
+## plot confidence interval(0.95), "square" method	
+corrplot(corr, low=res1[[2]], upp=res1[[3]],
+	col=c("white","black"),bg="gold2", order="PCA",
+	plotCI="square",addg=NULL,addc="no")
+corrplot(corr, p.mat = res1[[1]],low=res1[[2]], upp=res1[[3]],
+	col=c("white","black"),bg="gold2",order="PCA",pch.col="red", 
+	plotC="square", addg=NULL,addc="no")
+	
+## plot confidence interval(0.95, 0.95, 0.99), "rect" method
+corrplot(corr, low=res1[[2]], upp=res1[[3]], order="hclust",
+	rect.col="navy", plotC="rect",addc="no")
+corrplot(corr, p.mat = res1[[1]], low=res1[[2]], upp=res1[[3]], order="hclust",
+	pch.col="red", sig.level = 0.05, addrect=3, rect.col="navy",
+	plotC="rect",addc="no")
+corrplot(corr, p.mat = res2[[1]], low=res2[[2]], upp=res2[[3]], order="hclust",
+	pch.col="red", sig.level = 0.01, addrect=3, rect.col="navy",
+	plotC="rect",addc="no")
+
+
+## an animation of changing confidence interval in different significance level
+par(ask=FALSE)
+for(i in seq(0.1, 0.001, -0.001)){
+	tmp <- cor.mtest(mtcars,1-i)
+	corrplot(corr, p.mat = tmp[[1]], low=tmp[[2]], upp=tmp[[3]], order="hclust",
+		pch.col="red", sig.level = i, plotC="rect",addc="no",
+		mar=c(0,0,1,0), 
+		title=substitute(alpha == x,list(x=format(i,digits=3,nsmall=3))))
+	Sys.sleep(0.01)
+}
+
+
 }
 }
 
