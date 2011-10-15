@@ -1,0 +1,15 @@
+704535f6974a26b51d46587c7f75bd22 *DESCRIPTION
+91f2373a93f5f3e2e7c95603ec0706ea *R/colorlegend.r
+3b8c43528b35c24a7f39c97ae2a5c045 *R/corr.rect.R
+f7743ae566aa0e396b38ed6ccf262f74 *R/corrplot.R
+dcdfc10a9503c0db1b6fe5965e8c6698 *R/corrplot.circle.R
+6a4ec4c777551dab57893c1b85e2ef24 *R/corrplot.color.R
+4b64f88f393574e83fea06fa6842d51a *R/corrplot.ellipse.R
+875a26eada3b3988452bc299a980de0d *R/corrplot.number.R
+a8d2363c652feffa202ae29ed96416d5 *R/corrplot.pie.R
+69129116820cfc040eee71b8bd91b72c *R/corrplot.shade.R
+0bec73806a6406b9d7f92bffdc4570b1 *R/corrplot.square.R
+6d7a75b47f06dd5b165c5f2064cfd61c *man/colorlegend.rd
+a1f077fbc6ea22aa0b37c480d718e263 *man/corr.rect.Rd
+35483fc3335639ce808251b7e8145b1a *man/corrplot-package.Rd
+35a1972ebdca14c474f9e46628d56811 *man/corrplot.Rd
