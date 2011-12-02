@@ -1,28 +1,27 @@
 #' Visualize Correlation Matrix
-#'
 #' @author Taiyun Wei
 #' @email weitaiyun@gmail.com
-#  last modified by Taiyun Wei 2011-10-15
+#  last modified by Taiyun Wei 2011-11-30
 corrplot <- function(corr,
 		method = c("circle", "square", "ellipse", "number", "shade", "color", "pie"),
 		type = c("full", "lower", "upper"), add=FALSE, 
 		col = NULL, assign.col = c("-1to1","min2max","0to1"),
 		bg = "white", title = "",
 		diag = TRUE, outline = FALSE, mar = c(0,0,0,0),
-		addgrid.col = "gray", addnum.col= NULL,
+		addgrid.col = "gray", addCoef.col= NULL,
 
 		order = c("original", "PCA", "hclust", "alphabet"),
 		hclust.method = c("complete", "ward", "single", "average",
-							"mcquitty", "median", "centroid"),
+			"mcquitty", "median", "centroid"),
 		addrect = NULL, rect.col="black", rect.lwd = 2,
 
-		addtextlabel = c("lt","ld","td","d", "no"), tl.cex = 1,
-		tl.col = "red", tl.offset = 0.4,
+		addtextlabel = NULL, tl.cex = 1,
+		tl.col = "red", tl.offset = 0.4, tl.srt = 90,
 
-		addcolorlabel = c("right", "bottom","no"), cl.range=c( "-1to1","min2max","0to1"),
+		addcolorlabel = c("right", "bottom","no"), cl.range=NULL,
 		cl.length=11, cl.cex =0.8, cl.ratio = 0.15, cl.align.text="c",cl.offset=0.5,
 
-		addshade = c("negtive", "positive", "all"),
+		addshade = c("negative", "positive", "all"),
 		shade.lwd = 1, shade.col = "white",
 
 		p.mat = NULL, sig.level = 0.05,
@@ -30,24 +29,38 @@ corrplot <- function(corr,
 		pch = 4, pch.col = "black", pch.cex = 3,
 		
 		plotCI = c("no","square", "circle", "rect"),
-		lowCI.mat = NULL, uppCI.mat = NULL)
+		lowCI.mat = NULL, uppCI.mat = NULL, ...)
 {
-
+	
+	method <- match.arg(method)
+	type <- match.arg(type)
+	assign.col <- match.arg(assign.col)
+	order <- match.arg(order)
+	hclust.method <- match.arg(hclust.method)
+	addcolorlabel <- match.arg(addcolorlabel)
+	plotCI <- match.arg(plotCI)
+	insig <- match.arg(insig)
+	if(is.null(cl.range)) cl.range <- assign.col
+	
 	if(!is.matrix(corr) )
 		stop("Need a matrix!")
 		
 	if(min(corr) < -1 - .Machine$double.eps|| max(corr) > 1 + .Machine$double.eps)
 		stop("The number in matrix should be in [-1, 1]!")
 		
-	if(is.null(col))
-		col <- colorRampPalette(c("#67001F", "#B2182B", "#D6604D", "#F4A582", "#FDDBC7",
-				"#FFFFFF", "#D1E5F0", "#92C5DE", "#4393C3", "#2166AC", "#053061"))(200)
+	if(is.null(col)){	
+		ifelse(assign.col!="0to1",
+			col <- c("#67001F", "#B51F2E", "#DC6F58", "#F7B799", "#FDEBDF",
+				"#E5F0F6", "#A7CFE4", "#549EC9", "#246BAE", "#053061"),
+			col <- c("#F2F8FB", "#DAEAF3", "#BDDAEA", "#9BCAE0", "#74B2D4", 
+				"#4B98C5", "#3480B9", "#2268AD", "#134C88", "#053061")
+		)
+	}		
 	n <- nrow(corr)
 	m <- ncol(corr)
 	min.nm <- min(n,m)
 
-	order <- match.arg(order)
-	hclust.method <- match.arg(hclust.method)
+
 	NewOrder <- function(corr, order, ...){
 		if((!n==m)&(!order=="original")){
 			stop("The matrix must be squre if reorder variables!")
@@ -70,7 +83,7 @@ corrplot <- function(corr,
 		## reorder the variables using hclhust
 		if(order == "hclust"){
 			ord <- order.dendrogram(as.dendrogram(hclust(as.dist(1-corr),
-			method = hclust.method, ...)))
+			method = hclust.method)))
 		}
 
 		return(ord)
@@ -85,9 +98,7 @@ corrplot <- function(corr,
 	if (is.null(rownames(corr))) rownames(corr) <- 1:n
 	if (is.null(colnames(corr))) colnames(corr) <- 1:m
 
-	method <- match.arg(method)
-	type <- match.arg(type)
-	plotCI <- match.arg(plotCI)
+
 
 	getPos.Dat <- function(mat){
 		x <- matrix(1:n*m, n, m)
@@ -107,26 +118,25 @@ corrplot <- function(corr,
 
 	Pos  <- getPos.Dat(corr)[[1]]
 	n2 <- max(Pos[,2]); n1 <- min(Pos[,2])
-	nn <- n2 -n1
+	nn <- n2 - n1
 	newrownames <- as.character(rownames(corr)[(n+1-n2):(n+1-n1)])
 	m2 <- max(Pos[,1]); m1 <- min(Pos[,1])
-	mm <- m2 -m1
+	mm <- m2 - m1
 	newcolnames <- as.character(colnames(corr)[m1:m2])
 	DAT <- getPos.Dat(corr)[[2]]
 	len.DAT <- length(DAT)
-	assign.col <- match.arg(assign.col)
-	if(assign.col=="-1to1")
-		col.fill <- col[ceiling((DAT+1)*(length(col)-1)/2) + 1]
-	if(assign.col=="min2max"){
-		newcorr <- (DAT-min(DAT))/(diff(range(DAT)))*2-1
-		col.fill <- col[ceiling((newcorr+1)*(length(col)-1)/2) + 1]
+
+	if(assign.col=="-1to1")   newcorr <- (DAT + 1)/2
+	if(assign.col=="min2max") newcorr <- (DAT-min(DAT))/(diff(range(DAT)))
+	if(assign.col=="0to1"){	
+		newcorr <- DAT
+		if(any(DAT<0)) stop("There are negative numbers!")
 	}
-	if(assign.col=="0to1"){
-		if(any(DAT<0)) 
-			stop("There are negative numbers!")
-		newcorr <- DAT*2-1
-		col.fill <- col[ceiling((newcorr+1)*(length(col)-1)/2) + 1]
-	}	
+	newcorr[newcorr==0] <- 1e-5
+	col.fill <- col[ceiling(newcorr*length(col))]
+	
+	
+	
 	if(outline)
 		col.border <- "black"
 	if(!outline)
@@ -135,36 +145,42 @@ corrplot <- function(corr,
 	## calculate label-text width approximately
 	par(mar = mar, bg = "white")
 	if(!add) plot.new()
-	plot.window(c(m1-0.5, m2+0.5), c(n1-0.5, n2+0.5), asp = 1)
-	xlabwidth <- max(strwidth(newrownames, cex = tl.cex))
-	ylabwidth <- max(strwidth(newcolnames, cex = tl.cex))
-	S1 <- max(nn,mm)**2
+	xlabwidth <- ylabwidth <- 0
+	
+	for(i in 1:50){
+		xlim <- c(m1 - 0.5 - xlabwidth, m2 + 0.5 + mm*cl.ratio*(addcolorlabel=="right"))
+		ylim <- c(n1 - 0.5 - nn*cl.ratio*(addcolorlabel=="bottom"), n2 + 0.5 + ylabwidth)
+		plot.window(xlim + c(-0.2,0.2), ylim + c(-0.2,0.2), 
+			asp = 1, xaxs = "i", yaxs = "i")
+		x.tmp <- max(strwidth(newrownames, cex = tl.cex))
+		y.tmp <- max(strwidth(newcolnames, cex = tl.cex))
+		if(min(x.tmp-xlabwidth, y.tmp-ylabwidth) < 0.0001) break;
+		xlabwidth <- x.tmp
+		ylabwidth <- y.tmp
+	}
+	
+	if(is.null(addtextlabel)){
+		if(type=="full") addtextlabel <- "lt"
+		if(type=="lower") addtextlabel <- "ld"
+		if(type=="upper") addtextlabel <- "td"
+	}
+	if(addtextlabel=="no"|addtextlabel=="d") xlabwidth <- ylabwidth <- 0
+	if(addtextlabel=="td")	ylabwidth <- 0
+	if(addtextlabel=="ld")	xlabwidth <- 0
+	
+	laboffset <- strwidth("W", cex = tl.cex) * tl.offset
+	xlim <- c(m1 - 0.5 - xlabwidth - laboffset, 
+		m2 + 0.5 + mm*cl.ratio*(addcolorlabel=="right")) + c(-0.35,0.15)
+	ylim <- c(n1 - 0.5 - nn*cl.ratio*(addcolorlabel=="bottom"), 
+		n2 + 0.5 + ylabwidth*abs(sin(tl.srt*pi/180)) + laboffset) + c(-0.15, 0.35)
 
-	addtextlabel <- match.arg(addtextlabel)
-	if(addtextlabel=="no"|addtextlabel=="d") xlabwidth <- xlabwidth <- 0
-	## set up an empty plot with the appropriate dimensions
-
-	addcolorlabel <- match.arg(addcolorlabel)
-	cl.range <- match.arg(cl.range) 
-	## color label
-	if(addcolorlabel=="no"){
-		plot.window(c(-xlabwidth + m1 - 0.5, m2 + 0.5),
-					c(n1 - 0.5, n2 + 0.5 + ylabwidth),
-					asp = 1, xlab="", ylab="")
-		S2 <- (mm + xlabwidth)*(mm + ylabwidth)##area of figure
+	if(.Platform$OS.type == "windows"){ 
+		windows.options(width=7, height=7*diff(ylim)/diff(xlim))
 	}
-	if(addcolorlabel=="right"){
-		plot.window(c(-xlabwidth + m1 - 0.5, m2 + 0.5 + mm*cl.ratio),
-					c(n1 - 0.5, n2 + 0.5 + ylabwidth),
-					asp = 1, xlab="", ylab="")
-		S2 <- (mm + xlabwidth+ mm*cl.ratio)*(nn + ylabwidth)
-	}
-	if(addcolorlabel=="bottom"){
-		plot.window(c(-xlabwidth + m1 - 0.5, m2 + 0.5),
-					c(n1 - 0.5 - nn*cl.ratio, n2 + 0.5 + ylabwidth),
-					asp = 1, xlab="", ylab="")
-		S2 <- (mm + xlabwidth+ mm*cl.ratio)*(nn + ylabwidth)
-	}
+	
+	plot.window(xlim=xlim , ylim=ylim, 
+		asp = 1, xlab="", ylab="", xaxs = "i", yaxs = "i")
+		
 	## background color
 	symbols(Pos, add = TRUE, inches = FALSE,
 			squares = rep(1, len.DAT), bg = bg, fg = bg)
@@ -228,7 +244,7 @@ corrplot <- function(corr,
 				dat <- cbind(c(x1, x1, x), c(y, y1, y1),
 						c(x, x2, x2), c(y2, y2 ,y))
 			}
-			if((addshade=="negtive"||addshade=="all")&rho<0){
+			if((addshade=="negative"||addshade=="all")&rho<0){
 				dat <- cbind(c(x1, x1, x), c(y, y2, y2),
 						c(x, x2, x2), c(y1, y1 ,y))
 			}
@@ -260,7 +276,7 @@ corrplot <- function(corr,
 			squares = rep(1, len.DAT), fg = addgrid.col)
 	} 
 	
-	plotCI <- match.arg(plotCI)
+
 	if(plotCI!="no"){
 		if(is.null(lowCI.mat)||is.null(uppCI.mat))
 			stop("Need lowCI.mat and uppCI.mat!")
@@ -327,7 +343,7 @@ corrplot <- function(corr,
 
 	}
 	
-	insig <- match.arg(insig)
+
 	if(!is.null(p.mat)&!insig=="no"){
     	if(!order=="original")
     	p.mat <- p.mat[ord, ord]
@@ -371,13 +387,17 @@ corrplot <- function(corr,
 			}
 		}
 		if(cl.range=="-1to1"){
-			if(assign.col!="-1to1") stop("assign.col shoulde be \"-1to1\"")
+			if(assign.col!="-1to1") 
+			stop("assign.col shoulde be \"-1to1\" if cl.range==\"-1to1\"")
+			
 			colbar <- col
 			labels <- round(seq(-1,1, length=min(cl.length,length(col)+1)), 2)
 			at <- seq(0,1,length=length(labels))
 		}
 		if(cl.range=="0to1"){
-			if(assign.col!="0to1") stop("assign.col shoulde be \"0to1\"")
+			if(assign.col!="0to1") 
+			stop("assign.col shoulde be \"0to1\" if cl.range==\"0to1\"")
+			
 			colbar <- col
 			labels <- round(seq(0,1, length=min(cl.length,length(col)+1)), 2)
 			at <- seq(0,1,length=length(labels))
@@ -401,10 +421,9 @@ corrplot <- function(corr,
 	
 	## add variable names and title
 	if(addtextlabel!="no"){
-        cex2 <- tl.cex * S1/S2
-        ylabwidth2 <- strwidth(newrownames, cex = cex2)
-        xlabwidth2 <- strwidth(newcolnames, cex = cex2)
-        pos.xlabel <- cbind(m1:m2, n2 + 0.5 + xlabwidth2/2)
+        ylabwidth2 <- strwidth(newrownames, cex = tl.cex)
+        xlabwidth2 <- strwidth(newcolnames, cex = tl.cex)
+        pos.xlabel <- cbind(m1:m2, n2 + 0.5 + laboffset)
         pos.ylabel <- cbind(m1 - 0.5, n2:n1)
 
         if(addtextlabel=="td"){
@@ -413,7 +432,7 @@ corrplot <- function(corr,
 		}
         if(addtextlabel=="ld"){
 			if(type!="lower") stop("type should be \"lower\" if addtextlabel is \"ld\".")
-            pos.xlabel <- cbind(m1:m2, n2:(n2-mm) + 0.5 + xlabwidth2/2)
+            pos.xlabel <- cbind(m1:m2, n2:(n2-mm) + 0.5 + laboffset)
         }
 		if(addtextlabel=="d"){
 			##if(type!="full") stop("type should be \"full\" if addtextlabel is \"d\".")
@@ -423,21 +442,21 @@ corrplot <- function(corr,
 				bg = bg, fg = addgrid.col,
 				inches = FALSE, squares = rep(1, length(pos.ylabel[,1])))
 			text(pos.ylabel[,1]+0.5, pos.ylabel[,2], newcolnames[1:min(n,m)],
-                col = tl.col, cex = tl.cex * S1/S2)
-		} 
-		if(addtextlabel=="lt"){
-			text(pos.xlabel[,1], pos.xlabel[,2], newcolnames, srt = 90,
-                col = tl.col, cex = tl.cex * S1/S2, pos=3, offset=tl.offset)
+                col = tl.col, cex = tl.cex, ...)
+		} else {
+			text(pos.xlabel[,1], pos.xlabel[,2], newcolnames, srt = tl.srt, 
+				adj=ifelse(tl.srt==0, c(0.5,0), c(0,0)),
+                col = tl.col, cex = tl.cex, offset=tl.offset, ...)
 			text(pos.ylabel[,1], pos.ylabel[,2], newrownames,
-                col = tl.col, cex = tl.cex * S1/S2, pos=2, offset=tl.offset)
+                col = tl.col, cex = tl.cex, pos=2, offset=tl.offset, ...)
 		}
 	}
 
-	title(title)
+	title(title, ...)
    
 	## add numbers
-	if(!is.null(addnum.col)&(!method == "number")){
-		text(Pos[,1], Pos[,2], round(100 * DAT), col = addnum.col)
+	if(!is.null(addCoef.col)&(!method == "number")){
+		text(Pos[,1], Pos[,2], round(100 * DAT), col = addCoef.col)
 	}
 
 	if(type=="full"&plotCI=="no"&!is.null(addgrid.col))
@@ -457,4 +476,3 @@ corrplot <- function(corr,
 	invisible(ord)
 } 
 
-## end

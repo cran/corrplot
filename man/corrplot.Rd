@@ -30,20 +30,20 @@ corrplot(corr,
 		col = NULL, assign.col = c("-1to1","min2max","0to1"),
 		bg = "white", title = "",
 		diag = TRUE, outline = FALSE, mar = c(0,0,0,0),
-		addgrid.col = "gray", addnum.col= NULL,
+		addgrid.col = "gray", addCoef.col= NULL,
 
 		order = c("original", "PCA", "hclust", "alphabet"),
 		hclust.method = c("complete", "ward", "single", "average",
 							"mcquitty", "median", "centroid"),
 		addrect = NULL, rect.col="black", rect.lwd = 2,
 
-		addtextlabel = c("lt","ld","td","d", "no"), tl.cex = 1,
-		tl.col = "red", tl.offset = 0.4,
+		addtextlabel = NULL, tl.cex = 1,
+		tl.col = "red", tl.offset = 0.4, tl.srt = 90,
 
-		addcolorlabel = c("right", "bottom","no"), cl.range=c( "-1to1","min2max","0to1"),
+		addcolorlabel = c("right", "bottom","no"), cl.range=NULL,
 		cl.length=11, cl.cex =0.8, cl.ratio = 0.15, cl.align.text="c",cl.offset=0.5,
 
-		addshade = c("negtive", "positive", "all"),
+		addshade = c("negative", "positive", "all"),
 		shade.lwd = 1, shade.col = "white",
 
 		p.mat = NULL, sig.level = 0.05,
@@ -51,7 +51,7 @@ corrplot(corr,
 		pch = 4, pch.col = "black", pch.cex = 3,
 		
 		plotCI = c("no","square", "circle", "rect"),
-		lowCI.mat = NULL, uppCI.mat = NULL)
+		lowCI.mat = NULL, uppCI.mat = NULL, ...)
 	
 corrplot.circle(corr, ...)
 corrplot.square(corr, ...)
@@ -118,8 +118,8 @@ the color of grid, if \code{NULL}, don't add grid.
 }
 
 
-  \item{addnum.col}{
-color of coefficients added on the glyph circle, square, etc.), if \code{NULL}, add no coefficients. Note: the figures are expressed in terms of a percentage for spacesaving.
+  \item{addCoef.col}{
+color of coefficients added on the glyph circle, square, etc. if \code{NULL} (default), add no coefficients. Note: the figures are expressed in terms of a percentage for spacesaving.
 }
 
   \item{order}{
@@ -174,8 +174,10 @@ the color of text label.
 
   \item{tl.offset}{
 numeric, for text label, see \code{\link{text}}.
+}
 
-
+  \item{tl.srt}{
+numeric, for text label string rotation in degrees, see \code{\link{text}}.
 }
 
 
@@ -185,7 +187,8 @@ character, \code{"right"} (default), \code{"bottom"} or \code{"no"}, where to dr
 If \code{"no"}, don't draw colorlabel.
 }
   \item{cl.range}{
-character, \code{"-1to1"} (default), \code{"min2max"}, or \code{"0to1"} style of colorlabel. 
+character, \code{"-1to1"}, \code{"min2max"}, or \code{"0to1"} style of colorlabel. 
+The default value is the same with \code{"assign.col"}.
 See details in the examples.
 }
 
@@ -333,13 +336,13 @@ par(ask = TRUE)
 corrplot(corr, method="number", col="black", addcolorlabel="no")
 corrplot(corr, method="number")
 corrplot(corr)
-corrplot(corr, order="hclust")
 corrplot(corr, order ="PCA")
+corrplot(corr, method="color", order = "PCA", addCoef.col=grey(0.1))
 corrplot(corr, method="square", order = "PCA")
 corrplot(corr, method="ellipse", order = "PCA")
-corrplot(corr, method="color", order = "PCA")
 corrplot(corr, method="shade", order = "PCA")
 corrplot(corr, method="pie", order = "PCA")
+
 
 ## mixed methods
 corrplot(corr,order="PCA",type="upper",addtextlabel="no")
@@ -352,55 +355,72 @@ corrplot(corr,add=TRUE, type="lower",
 
 
 ## order is hclust and draw rectangles
+corrplot(corr, order="hclust")
 corrplot(corr, order="hclust", addrect = 2)
 corrplot(corr, order="hclust", addrect = 3, rect.col = "red")
 corrplot(corr, order="hclust", addrect = 4, rect.col = "blue")
 corrplot(corr, order="hclust", hclust.method="ward", addrect = 4)
 
-
-
-## text-labels and plot type
-corrplot(corr, order="PCA", addtextlabel="d")
-corrplot(corr, order="PCA", diag=FALSE, addtextlabel="d")
-corrplot(corr, order="PCA", diag=FALSE, addtextlabel="d",cl.range="min2max")
-corrplot(corr, order="PCA", type="upper", addtextlabel="td")
-corrplot(corr, order="PCA", type="upper", diag=FALSE, addtextlabel="td")
-corrplot(corr, order="PCA", type="lower", addcolorlabel="b", addtextlabel="ld")
-corrplot(corr, order="PCA", type="lower", addcolorlabel="b", diag=FALSE, addtextlabel="ld")
-
-
-
-#### color-legend, corr-color, and background-color
-corrplot(corr, order="PCA", cl.ratio=0.1, cl.align="r", cl.offset=0)
-corrplot(corr, order="PCA", cl.ratio=0.15,cl.length=9)
-corrplot(corr, order="PCA", cl.ratio=0.2, cl.align="l")
-corrplot(corr, order="PCA", addcolorlabel="b")
-corrplot(corr, order="PCA", addcolorlabel="b",cl.range="min2max",addt="d")
-corrplot(corr, order="PCA", addcolorlabel="no")
-col1 <- rev(heat.colors(100))
-col2 <- colorRampPalette(c("red", "white", "blue"))
-col3 <- colorRampPalette(rev(c("#00007F", "blue", "#007FFF", "cyan",
-                     "white", "yellow", "#FF7F00", "red", "#7F0000")))
-col4 <- grey(10:1/10)
+##  color of matrix
+col1 <- colorRampPalette(rev(c("#00007F", "blue", "#007FFF", "cyan",
+            "white", "yellow", "#FF7F00", "red", "#7F0000")))
+col2 <- colorRampPalette(c("#67001F", "#B2182B", "#D6604D", "#F4A582", "#FDDBC7",
+			"#FFFFFF", "#D1E5F0", "#92C5DE", "#4393C3", "#2166AC", "#053061"))	
+col3 <- colorRampPalette(c("red", "white", "blue"))			
 wb <- c("white","black")
-corrplot(corr, order="PCA", col=col1)
-corrplot(corr, order="PCA", col=col2(100))
+## col1 
+corrplot(corr, order="PCA", col=col1(200))
+corrplot(corr, order="PCA", col=col1(20), cl.length=21)
+corrplot(corr, order="PCA", col=col1(10))
+corrplot(corr, order="PCA", col=col1(8))
+## col2
+corrplot(corr, order="PCA", col=col2(200))
+corrplot(corr, order="PCA", col=col2(10))
+corrplot(corr, order="PCA", col=col2(8))
+## col3
 corrplot(corr, order="PCA", col=col3(100))
-corrplot(corr, order="PCA", col=col4)
-
+corrplot(corr, order="PCA", col=col3(10))
+## col=wb
 corrplot(corr, col = wb, order="PCA", outline=TRUE, addcolorlabel="no")
 ## like Chinese wiqi, suit for either on screen or white-black print.
 corrplot(corr, col = wb, bg="gold2",  order="PCA", addcolorlabel="no")
 
 
+## visualize a similarrity matrix in [0, 1]
+corrplot(abs(corr),order="PCA",assign.col="0to1")
+corrplot(abs(corr),order="PCA",assign.col="0to1", col=col1(20)[11:20])
+corrplot(abs(corr),order="PCA",assign.col="0to1", col=col3(200)[101:200])
 
-## addshade, addgrid and addnum
-corrplot.shade(corr, order="PCA", addshade = "negtive", addgrid.col=NULL)
+## text-labels and plot type
+corrplot(corr, order="PCA", tl.srt=45)
+corrplot(corr, order="PCA", tl.srt=60)
+corrplot(corr, order="PCA", addtextlabel="d",addcolorlabel="no")
+corrplot(corr, order="PCA", diag=FALSE, addtextlabel="d")
+corrplot(corr, order="PCA", diag=FALSE, addtextlabel="d",cl.range="min2max")
+corrplot(corr, order="PCA", type="upper")
+corrplot(corr, order="PCA", type="upper", diag=FALSE)
+corrplot(corr, order="PCA", type="lower", addcolorlabel="b")
+corrplot(corr, order="PCA", type="lower", addcolorlabel="b", diag=FALSE)
+
+
+
+#### color-legend
+corrplot(corr, order="PCA", cl.ratio=0.2, cl.align="l")
+corrplot(corr, order="PCA", cl.ratio=0.2, cl.align="c")
+corrplot(corr, order="PCA", cl.ratio=0.2, cl.align="r")
+corrplot(corr, order="PCA", addcolorlabel="bottom")
+corrplot(corr, order="PCA", addcolorlabel="bottom", cl.range="min2max", addtextlabel="d")
+corrplot(corr, order="PCA", addcolorlabel="no")
+
+
+
+## addshade, addgrid and addCoef
+corrplot.shade(corr, order="PCA", addshade = "negative", addgrid.col=NULL)
 corrplot.shade(corr, order="PCA", addshade = "positive", addgrid.col=NULL)
 corrplot.shade(corr, order="PCA", addshade = "all", addgrid.col=NULL)
 corrplot.color(corr, order="PCA", addgrid.col=NULL)
 corrplot.color(corr, order="PCA", addgrid.col="white")
-corrplot.color(corr, order="PCA", addgrid.col="white", addnum.col="grey10")
+corrplot.color(corr, order="PCA", addgrid.col="white", addCoef.col="grey10")
 
 
 ##the input matrix is not square
@@ -476,7 +496,7 @@ par(ask=FALSE)
 for(i in seq(0.1, 0.001, -0.001)){
 	tmp <- cor.mtest(mtcars,1-i)
 	corrplot(corr, p.mat = tmp[[1]], low=tmp[[2]], upp=tmp[[3]], order="hclust",
-		pch.col="red", sig.level = i, plotC="rect",addc="no",
+		pch.col="red", sig.level = i, plotC="rect", addc="no",
 		mar=c(0,0,1,0), 
 		title=substitute(alpha == x,list(x=format(i,digits=3,nsmall=3))))
 	Sys.sleep(0.01)
