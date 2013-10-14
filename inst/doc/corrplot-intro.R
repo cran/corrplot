@@ -1,10 +1,10 @@
 
-## @knitr setup, include=FALSE
+## ----setup, include=FALSE------------------------------------------------
 library(knitr)
 opts_chunk$set(out.extra='style="display:block; margin: auto"', fig.align="center")
 
 
-## @knitr methods
+## ----methods-------------------------------------------------------------
 library(corrplot)
 M <- cor(mtcars)
 corrplot(M, method="circle")
@@ -16,31 +16,31 @@ corrplot(M, method="color")
 corrplot(M, method="pie")
 
 
-## @knitr layout
+## ----layout--------------------------------------------------------------
 corrplot(M, type="upper")
 corrplot(M, type="lower")
 
 
-## @knitr mixed
+## ----mixed---------------------------------------------------------------
 corrplot.mixed(M)
 corrplot.mixed(M, lower="ellipse", upper="circle")
 corrplot.mixed(M, lower="square", upper="circle")
 
 
 
-## @knitr order
+## ----order---------------------------------------------------------------
 corrplot(M, order ="AOE")
 corrplot(M, order ="hclust")
 corrplot(M, order ="FPC")
 corrplot(M, order ="alphabet")
 
 
-## @knitr rectangles
+## ----rectangles----------------------------------------------------------
 corrplot(M, order="hclust", addrect=2)
 corrplot(M, order="hclust", addrect=3)
 
 
-## @knitr color
+## ----color---------------------------------------------------------------
 col1 <- colorRampPalette(c("#7F0000","red","#FF7F00","yellow","white", 
   		"cyan", "#007FFF", "blue","#00007F"))
 col2 <- colorRampPalette(c("#67001F", "#B2182B", "#D6604D", "#F4A582", "#FDDBC7",
@@ -57,7 +57,7 @@ corrplot(M, order="hclust", addrect=2, col=col4(10))
 corrplot(M, order="hclust", addrect=2, col=wb, bg="gold2")
 
 
-## @knitr color-label
+## ----color-label---------------------------------------------------------
 ## remove color legend and text legend 
 corrplot(M, order="AOE", cl.pos="n", tl.pos="n")  
 ## bottom  color legend, diagonal text legend, rotate text label
@@ -66,7 +66,7 @@ corrplot(M, order="AOE", cl.pos="b", tl.pos="d", tl.srt=60)
 corrplot(M, order="AOE", cl.ratio=0.2, cl.align="r")
 
 
-## @knitr non-corr
+## ----non-corr------------------------------------------------------------
 corrplot(abs(M),order="AOE", col=col3(200), cl.lim=c(0,1))
 ## visualize a  matrix in [-100, 100]
 ran <- round(matrix(runif(225, -100,100), 15))
@@ -75,7 +75,7 @@ corrplot(ran, is.corr=FALSE, method="square")
 corrplot(ran, is.corr=FALSE, method="ellipse", cl.lim=c(-100, 100))
 
 
-## @knitr test
+## ----test----------------------------------------------------------------
 cor.mtest <- function(mat, conf.level = 0.95){
   mat <- as.matrix(mat)
 	n <- ncol(mat)
@@ -109,7 +109,7 @@ corrplot(M, p.mat = res1[[1]], insig = "p-value", sig.level=-1)
 corrplot(M, p.mat = res1[[1]], order="hclust", insig = "pch", addrect=3)
 
 
-## @knitr ci
+## ----ci------------------------------------------------------------------
 ## plot confidence interval(0.95, 0.95, 0.99), "rect" method
 corrplot(M, low=res1[[2]], upp=res1[[3]], order="hclust",
   rect.col="navy", plotC="rect",cl.pos="n")
@@ -118,7 +118,7 @@ corrplot(M, p.mat = res1[[1]], low=res1[[2]], upp=res1[[3]], order="hclust",
 	plotC="rect",cl.pos="n")
 
 
-## @knitr ani, eval=FALSE
+## ----ani, eval=FALSE-----------------------------------------------------
 ## for(i in seq(0.1, 0, -0.005)){
 ##   tmp <- cor.mtest(mtcars,1-i)
 ## 	corrplot(M, p.mat = tmp[[1]], low=tmp[[2]], upp=tmp[[3]], order="hclust",

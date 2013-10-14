@@ -1,8 +1,7 @@
 Package: corrplot
 Type: Package
 Title: Visualization of a correlation matrix
-Version: 0.71
-Date: 2013-02-22
+Version: 0.72
 Author: Taiyun Wei
 Suggests: seriation, knitr
 Maintainer: Taiyun Wei <weitaiyun@gmail.com>
@@ -13,7 +12,7 @@ License: GPL
 URL: https://github.com/taiyun/corrplot
 BugReports: https://github.com/taiyun/corrplot/issues
 VignetteBuilder: knitr
-Packaged: 2013-03-05 03:45:52 UTC; yihui
+Packaged: 2013-10-14 07:02:45 UTC; Administrator
 NeedsCompilation: no
 Repository: CRAN
-Date/Publication: 2013-03-05 08:48:17
+Date/Publication: 2013-10-14 09:12:41
