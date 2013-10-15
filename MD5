@@ -1,4 +1,4 @@
-03b049942ef9f02899b15c15bf3b78b6 *DESCRIPTION
+276221a0bef35068ba74499aecd7a840 *DESCRIPTION
 3e998c181b646800f1ee73dc18c3ff56 *NAMESPACE
 797cd37087c1fb3152f28f2357cb6bc9 *NEWS
 2c036ccddb64c9b8ac20120ae783ab3a *R/colorlegend.R
@@ -7,11 +7,11 @@ aa7a997d2a50013078f9fdab8a826e86 *R/corrRect.R
 0117d4d27c749047d9326afc72f2b5db *R/corrRect.hclust.R
 1c5684062fd9af9823ded400278ff32e *R/corrplot.R
 3eff5e79b5816c4618e76ca9d2b811e2 *R/corrplot.mixed.R
-e8a3f9b9aaedb9d9d1292131a061ee38 *README
-fb468c35d5e9064bdd43c4d0bd7c3f5a *build/vignette.rds
-7aacef06a9214e6eb148ab2941f22c24 *inst/doc/corrplot-intro.R
+10f968052170802bbaae5e30afa231ca *README.md
+48a8624e5c62ae482e385bdd809ed65f *build/vignette.rds
+114bcffb342c6fd553f28ca37c312aa3 *inst/doc/corrplot-intro.R
 b7b5757e096c174e40680e5489491db6 *inst/doc/corrplot-intro.Rmd
-007073cfe2db8443698a23bc69984506 *inst/doc/corrplot-intro.html
+2b7f3bb26ad5d71ee9723a7f22e7f8db *inst/doc/corrplot-intro.html
 b5930c1034e43e99faca7394ef0d74bc *man/colorlegend.Rd
 fd0cb9f06d14ef5cfa5c5c7da3713cb4 *man/corrMatOrder.Rd
 101d6d17b564f04a5a5918882d66f550 *man/corrRect.Rd
