@@ -1,5 +1,5 @@
 <!--
-%\VignetteEngine{knitr}
+%\VignetteEngine{knitr::docco_linear}
 %\VignetteIndexEntry{An Introduction to the corrplot package}
 -->
 
@@ -9,7 +9,8 @@ An Introduction to **corrplot** package
 
 ```{r setup, include=FALSE}
 library(knitr)
-opts_chunk$set(out.extra='style="display:block; margin: auto"', fig.align="center")
+library(Cairo)
+opts_chunk$set(out.extra='style="display:block; margin: auto"', fig.align="center", dev='CairoPNG')
 ```
 
 
@@ -141,6 +142,16 @@ corrplot(ran, is.corr=FALSE, method="square")
 corrplot(ran, is.corr=FALSE, method="ellipse", cl.lim=c(-100, 100))
 ```
 
+Deal with missing Values
+----------------------------------
+```{r NAs}
+M2 <- M
+diag(M2) = NA
+corrplot(M2)
+corrplot(M2, na.label = "o")
+corrplot(M2, na.label = "NA")
+```
+
 Combine with the Significance Test
 ----------------------------------
 ```{r test}
@@ -187,19 +198,4 @@ corrplot(M, p.mat = res1[[1]], low=res1[[2]], upp=res1[[3]], order="hclust",
 	pch.col="red", sig.level = 0.01, addrect=3, rect.col="navy",
 	plotC="rect",cl.pos="n")
 ```
-
-Here is an animation to show the relation between significant level and confidence interval.
-```{r ani, eval=FALSE}
-for(i in seq(0.1, 0, -0.005)){
-  tmp <- cor.mtest(mtcars,1-i)
-	corrplot(M, p.mat = tmp[[1]], low=tmp[[2]], upp=tmp[[3]], order="hclust",
-		pch.col="red", sig.level = i, plotC="rect", cl.pos="n",
-		mar=c(0,0,1,0), 
-		title=substitute(alpha == x,list(x=format(i,digits=3,nsmall=3))))
-}
-```
-
-<div align = "center">
- <embed width="504" height="504" name="plugin" src="http://animation.r-forge.r-project.org/swf/corrplot-ani.swf" type="application/x-shockwave-flash"> 
-</div>
 

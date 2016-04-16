@@ -1,8 +1,7 @@
-
 ## ----setup, include=FALSE------------------------------------------------
 library(knitr)
-opts_chunk$set(out.extra='style="display:block; margin: auto"', fig.align="center")
-
+library(Cairo)
+opts_chunk$set(out.extra='style="display:block; margin: auto"', fig.align="center", dev='CairoPNG')
 
 ## ----methods-------------------------------------------------------------
 library(corrplot)
@@ -15,17 +14,14 @@ corrplot(M, method="shade")
 corrplot(M, method="color")
 corrplot(M, method="pie")
 
-
 ## ----layout--------------------------------------------------------------
 corrplot(M, type="upper")
 corrplot(M, type="lower")
-
 
 ## ----mixed---------------------------------------------------------------
 corrplot.mixed(M)
 corrplot.mixed(M, lower="ellipse", upper="circle")
 corrplot.mixed(M, lower="square", upper="circle")
-
 
 
 ## ----order---------------------------------------------------------------
@@ -34,11 +30,9 @@ corrplot(M, order ="hclust")
 corrplot(M, order ="FPC")
 corrplot(M, order ="alphabet")
 
-
 ## ----rectangles----------------------------------------------------------
 corrplot(M, order="hclust", addrect=2)
 corrplot(M, order="hclust", addrect=3)
-
 
 ## ----color---------------------------------------------------------------
 col1 <- colorRampPalette(c("#7F0000","red","#FF7F00","yellow","white", 
@@ -56,7 +50,6 @@ corrplot(M, order="hclust", addrect=2, col=col3(20))
 corrplot(M, order="hclust", addrect=2, col=col4(10))
 corrplot(M, order="hclust", addrect=2, col=wb, bg="gold2")
 
-
 ## ----color-label---------------------------------------------------------
 ## remove color legend and text legend 
 corrplot(M, order="AOE", cl.pos="n", tl.pos="n")  
@@ -64,7 +57,6 @@ corrplot(M, order="AOE", cl.pos="n", tl.pos="n")
 corrplot(M, order="AOE", cl.pos="b", tl.pos="d", tl.srt=60)
 ## a wider color legend with numbers right aligned
 corrplot(M, order="AOE", cl.ratio=0.2, cl.align="r")
-
 
 ## ----non-corr------------------------------------------------------------
 corrplot(abs(M),order="AOE", col=col3(200), cl.lim=c(0,1))
@@ -74,6 +66,12 @@ corrplot(ran, is.corr=FALSE, method="square")
 ## a beautiful color legend 
 corrplot(ran, is.corr=FALSE, method="ellipse", cl.lim=c(-100, 100))
 
+## ----NAs-----------------------------------------------------------------
+M2 <- M
+diag(M2) = NA
+corrplot(M2)
+corrplot(M2, na.label = "o")
+corrplot(M2, na.label = "NA")
 
 ## ----test----------------------------------------------------------------
 cor.mtest <- function(mat, conf.level = 0.95){
@@ -108,7 +106,6 @@ corrplot(M, p.mat = res1[[1]], insig = "p-value", sig.level=-1)
 ## add cross on no significant coefficient 
 corrplot(M, p.mat = res1[[1]], order="hclust", insig = "pch", addrect=3)
 
-
 ## ----ci------------------------------------------------------------------
 ## plot confidence interval(0.95, 0.95, 0.99), "rect" method
 corrplot(M, low=res1[[2]], upp=res1[[3]], order="hclust",
@@ -116,15 +113,4 @@ corrplot(M, low=res1[[2]], upp=res1[[3]], order="hclust",
 corrplot(M, p.mat = res1[[1]], low=res1[[2]], upp=res1[[3]], order="hclust",
 	pch.col="red", sig.level = 0.01, addrect=3, rect.col="navy",
 	plotC="rect",cl.pos="n")
-
-
-## ----ani, eval=FALSE-----------------------------------------------------
-## for(i in seq(0.1, 0, -0.005)){
-##   tmp <- cor.mtest(mtcars,1-i)
-## 	corrplot(M, p.mat = tmp[[1]], low=tmp[[2]], upp=tmp[[3]], order="hclust",
-## 		pch.col="red", sig.level = i, plotC="rect", cl.pos="n",
-## 		mar=c(0,0,1,0),
-## 		title=substitute(alpha == x,list(x=format(i,digits=3,nsmall=3))))
-## }
-
 
