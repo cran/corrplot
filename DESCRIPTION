@@ -1,7 +1,7 @@
 Package: corrplot
 Type: Package
 Title: Visualization of a Correlation Matrix
-Version: 0.76
+Version: 0.77
 Author: Taiyun Wei, Viliam Simko
 Suggests: seriation, knitr, Cairo, testthat
 Maintainer: Taiyun Wei <weitaiyun@gmail.com>
@@ -13,6 +13,6 @@ BugReports: https://github.com/taiyun/corrplot/issues
 VignetteBuilder: knitr
 RoxygenNote: 5.0.1
 NeedsCompilation: no
-Packaged: 2016-04-15 07:01:02 UTC; taiyun.wei
+Packaged: 2016-04-20 09:30:20 UTC; taiyun.wei
 Repository: CRAN
-Date/Publication: 2016-04-16 00:13:09
+Date/Publication: 2016-04-21 08:20:39
