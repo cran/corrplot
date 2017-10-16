@@ -42,15 +42,16 @@
 #'   principal diagonal.
 #'
 #' @param outline Logical or character, whether plot outline of circles, square
-#'   and ellipse, or the color of these glyphs. If \code{outline} is
-#'   \code{TRUE}, the default value is \code{"black"}.
+#'   and ellipse, or the color of these glyphs. For pie, this represents the
+#'   color of the circle outlining the pie. If \code{outline} is \code{TRUE},
+#'   the default value is \code{"black"}.
 #'
 #' @param mar See \code{\link{par}}.
 #'
 #' @param addgrid.col The color of the grid. If \code{NA}, don't add grid. If
 #'   \code{NULL} the default value is chosen. The default value depends on
-#'   \code{method}, if \code{method} is \code{color} or \code{shade}, the
-#'   color of the grid is \code{NA}, that is, not draw grid; otherwise \code{"grey"}.
+#'   \code{method}, if \code{method} is \code{color} or \code{shade}, the color
+#'   of the grid is \code{NA}, that is, not draw grid; otherwise \code{"grey"}.
 #'
 #' @param addCoef.col Color of coefficients added on the graph. If \code{NULL}
 #'   (default), add no coefficients.
@@ -151,14 +152,19 @@
 #'
 #' @param sig.level Significant level,  if the p-value in \code{p-mat} is bigger
 #'   than \code{sig.level}, then the corresponding correlation coefficient is
-#'   regarded as insignificant.
+#'   regarded as insignificant. If \code{insig} is \code{"label_sig"}, this may
+#'   be an increasing vector of significance levels, in which case \code{pch}
+#'   will be used once for the highest p-value interval and multiple times
+#'   (e.g. "*", "**", "***") for each lower p-value interval.
 #'
 #' @param insig Character, specialized insignificant correlation coefficients,
-#'   \code{"pch"} (default), \code{"p-value"}, \code{"blank"} or \code{"n"}. If
-#'   \code{"blank"}, wipe away the corresponding glyphs; if \code{"p-value"},
-#'   add p-values the corresponding glyphs; if \code{"pch"}, add characters (see
-#'   \code{pch} for details) on corresponding glyphs; if \code{"n"}, don't take
-#'   any measures.
+#'   \code{"pch"} (default), \code{"p-value"}, \code{"blank"}, \code{"n"}, or
+#'   \code{"label_sig"}. If \code{"blank"}, wipe away the corresponding glyphs;
+#'   if \code{"p-value"}, add p-values the corresponding glyphs;
+#'   if \code{"pch"}, add characters (see \code{pch} for details) on
+#'   corresponding glyphs; if \code{"n"}, don't take any measures; if
+#'   \code{"label_sig"}, mark significant correlations with pch
+#'   (see \code{sig.level}).
 #'
 #' @param pch Add character on the glyphs of insignificant correlation
 #'   coefficients(only valid when \code{insig} is \code{"pch"}). See
@@ -189,6 +195,9 @@
 #' @param na.label.col Color used for rendering \code{NA} cells. Default is
 #'   \code{"black"}.
 #'
+#' @param win.asp Aspect ration for the whole plot. Value other than 1 is
+#'   currently compatible only with methods "circle" and "square".
+#'
 #' @param \dots Additional arguments passing to function \code{text} for drawing
 #'   text lable.
 #'
@@ -208,10 +217,16 @@
 #'
 #' @author Taiyun Wei (weitaiyun@@gmail.com)
 #' @author Viliam Simko (viliam.simko@@gmail.com)
+#' @author Michael Levy (michael.levy@@healthcatalyst.com)
 #'
 #' @note \code{Cairo} and \code{cairoDevice} packages is strongly recommended to
 #'   produce high-quality PNG, JPEG, TIFF bitmap files, especially for that
 #'   \code{method} \code{circle}, \code{ellipse}.
+#'
+#' @note Row- and column names of the input matrix are used as labels rendered
+#'   in the corrplot. Plothmath expressions will be used if the name is prefixed
+#'   by one of the following characters: \code{:}, \code{=} or \code{$}.
+#'   For example \code{":alpha + beta"}.
 #'
 #' @seealso Function \code{plotcorr}  in the \code{ellipse} package and
 #'   \code{corrgram}  in the \code{corrgram} package have some similarities.
@@ -220,7 +235,6 @@
 #'   ARSA, BBURCG, BBWRCG, MDS, TSP, Chen and so forth.
 #'
 #' @example vignettes/example-corrplot.R
-#' @keywords hplot
 #' @import graphics grDevices stats
 #' @export
 corrplot <- function(corr,
@@ -248,25 +262,37 @@ corrplot <- function(corr,
   shade.lwd = 1, shade.col = "white",
 
   p.mat = NULL, sig.level = 0.05,
-  insig = c("pch", "p-value", "blank", "n"),
+  insig = c("pch", "p-value", "blank", "n", "label_sig"),
   pch = 4, pch.col = "black", pch.cex = 3,
 
   plotCI = c("n", "square", "circle", "rect"),
   lowCI.mat = NULL, uppCI.mat = NULL,
-  na.label = "?", na.label.col = "black", ...)
+  na.label = "?", na.label.col = "black",
+  win.asp = 1,
+  ...)
 {
 
+  # checking multi-option input parameters
   method <- match.arg(method)
   type <- match.arg(type)
   order <- match.arg(order)
   hclust.method <- match.arg(hclust.method)
-  plotCI <- match.arg(plotCI)
+  addshade <- match.arg(addshade)
   insig <- match.arg(insig)
+  plotCI <- match.arg(plotCI)
+
+  # rescale symbols within the corrplot based on win.asp parameter
+  if (win.asp != 1 && !(method %in% c("circle", "square"))) {
+    stop("Parameter 'win.asp' is supported only for circle and square methods.")
+  }
+  asp_rescale_factor <- min(1, win.asp) / max(1, win.asp)
+  stopifnot(asp_rescale_factor >= 0 && asp_rescale_factor <= 1)
 
   if (!is.matrix(corr) && !is.data.frame(corr)) {
     stop("Need a matrix or data frame!")
   }
 
+  # select grid color automatically if not specified
   if (is.null(addgrid.col)) {
     addgrid.col <- switch(method, color = NA, shade = NA, "grey")
   }
@@ -277,9 +303,16 @@ corrplot <- function(corr,
 
   if (is.null(cl.lim)) {
     if (is.corr) {
+      # if the matrix is expected to be a correlation matrix
+      # it MUST be within the interval [-1,1]
       cl.lim <- c(-1,1)
     } else {
-      cl.lim <- c(min(corr), max(corr))
+      # Issue #91
+      # if not a correlation matrix and the diagonal is hidden,
+      # we need to compute limits from all cells except the diagonal
+      corr_tmp <- corr
+      diag(corr_tmp) <- ifelse(diag, diag(corr_tmp), NA)
+      cl.lim <- c(min(corr_tmp, na.rm = TRUE), max(corr_tmp, na.rm = TRUE))
     }
   }
 
@@ -287,27 +320,66 @@ corrplot <- function(corr,
   zoom <- 1
 
   if (!is.corr) {
-    if (max(corr) * min(corr) < 0) {
-      intercept <- 0
-      zoom <- 1 / max(abs(cl.lim))
-    }
-    if (min(corr) >= 0) {
-      intercept <- -cl.lim[1]
-      zoom <- 1 / (diff(cl.lim))
-    }
-    if (max(corr) <= 0) {
+
+    c_max <- max(corr, na.rm = TRUE)
+    c_min <- min(corr, na.rm = TRUE)
+
+    # The following if-elseif-else code should exhaustively cover all 9
+    # combinations of c_min and c_max variables. Each variable can be either
+    # zero (0), positive (+) or negative (-).
+
+    # c_min c_max
+
+    # 00
+    # -0
+    # +0
+    # --
+    # 0-
+    if (c_max <= 0) {
       intercept <- -cl.lim[2]
       zoom <- 1 / (diff(cl.lim))
     }
+
+    # ++
+    # +-
+    # 0+
+    else if (c_min >= 0) {
+      intercept <- -cl.lim[1]
+      zoom <- 1 / (diff(cl.lim))
+    }
+
+    # -+
+    else {
+
+      # expression from the original code as a sanity check
+      stopifnot(c_max * c_min < 0)
+
+      # newly derived expression which covers the single remainig case
+      stopifnot(c_min < 0 && c_max > 0)
+
+      intercept <- 0
+      zoom <- 1 / max(abs(cl.lim))
+    }
+
+    # now, the zoom might still be Inf when cl.lim were both zero
+    if (zoom == Inf) {
+      stopifnot(cl.lim[1] == 0 && cl.lim[2] == 0) # check the assumption
+      zoom <- 0
+    }
+
     corr <- (intercept + corr) * zoom
   }
 
   cl.lim2 <- (intercept + cl.lim) * zoom
   int <- intercept * zoom
 
-  if (min(corr, na.rm = TRUE) < -1 - .Machine$double.eps ^ .75 ||
+  if (is.corr) {
+    # check the interval if expecting a correlation matrix
+    # otherwise, the values can be any number
+    if (min(corr, na.rm = TRUE) < -1 - .Machine$double.eps ^ .75 ||
       max(corr, na.rm = TRUE) >  1 + .Machine$double.eps ^ .75 ) {
-    stop("The matrix is not in [-1, 1]!")
+      stop("The matrix is not in [-1, 1]!")
+    }
   }
 
   if (is.null(col)) {
@@ -336,10 +408,10 @@ corrplot <- function(corr,
 
   # assigns Inf to cells in the matrix depending on the type paramter
   apply_mat_filter <- function(mat) {
-    x <- matrix(1:n * m, n, m)
+    x <- matrix(1:n * m, nrow = n, ncol = m)
     switch(type,
-        upper = mat[row(x) > col(x)] <- Inf,
-        lower = mat[row(x) < col(x)] <- Inf
+      upper = mat[row(x) > col(x)] <- Inf,
+      lower = mat[row(x) < col(x)] <- Inf
     )
 
     if (!diag) {
@@ -363,36 +435,63 @@ corrplot <- function(corr,
   # we use this for rending NA cells differently
   getPos.NAs <- function(mat) {
     tmp <- apply_mat_filter(mat)
-    ind  <- which(is.na(tmp), arr.ind = TRUE)
+    ind <- which(is.na(tmp), arr.ind = TRUE)
     Pos <- ind
     Pos[,1] <-  ind[,2]
     Pos[,2] <- -ind[,1] + 1 + n
     return(Pos)
   }
 
-  Pos  <- getPos.Dat(corr)[[1]]
-  n2 <- max(Pos[,2])
-  n1 <- min(Pos[,2])
-  nn <- n2 - n1
-  newrownames <- as.character(rownames(corr)[(n + 1 - n2):(n + 1 - n1)])
-  m2 <- max(Pos[,1])
-  m1 <- min(Pos[,1])
+  Pos <- getPos.Dat(corr)[[1]]
 
-  # Viliam Simko: fixing issue #19
+  # decide whether NA labels are going to be rendered or whether we ignore them
+  if (any(is.na(corr)) && is.character(na.label)) {
+    PosNA <- getPos.NAs(corr)
+  } else {
+    # explicitly set to NULL to indicate that NA labels are not going to be
+    # rendered
+    PosNA <- NULL
+  }
+
+  AllCoords <- rbind(Pos, PosNA)
+
+  # rows
+  n2 <- max(AllCoords[,2])
+  n1 <- min(AllCoords[,2])
+
+  nn <- n2 - n1
+
+  # columns
+  m2 <- max(AllCoords[,1])
+  m1 <- min(AllCoords[,1])
+
+  # Issue #19: legend color bar width 0 when using just one column matrix
   # also discussed here: http://stackoverflow.com/questions/34638555/
   mm <- max(1, m2 - m1)
 
-  newcolnames <- as.character(colnames(corr)[m1:m2])
+  # Issue #20: support plotmath expressions in rownames and colnames
+  expand_expression <- function(s) {
+    ifelse(grepl("^[:=$]", s), parse(text = substring(s, 2)), s)
+  }
+
+  newrownames <- sapply(
+    rownames(corr)[(n + 1 - n2):(n + 1 - n1)], expand_expression)
+
+  newcolnames <- sapply(
+    colnames(corr)[m1:m2], expand_expression)
+
   DAT <- getPos.Dat(corr)[[2]]
   len.DAT <- length(DAT)
 
-  ## assign colors
-  assign.color <- function(dat = DAT, color = col){
-     newcorr <- (dat + 1) / 2
-     newcorr[newcorr <= 0]  <- 0
-     newcorr[newcorr >= 1]  <- 1 - 1e-16
+  rm(expand_expression) # making sure the function is only used here
 
-     color[floor(newcorr * length(color)) + 1] # new color returned
+  ## assign colors
+  assign.color <- function(dat = DAT, color = col) {
+    newcorr <- (dat + 1) / 2
+    newcorr[newcorr <= 0]  <- 0
+    newcorr[newcorr >= 1]  <- 1 - 1e-16
+
+    color[floor(newcorr * length(color)) + 1] # new color returned
   }
 
   col.fill <- assign.color()
@@ -418,54 +517,72 @@ corrplot <- function(corr,
 
   if (isFALSE(outline)) {
     col.border <- col.fill
-  }
-
-  if (isTRUE(outline)) {
+  } else if (isTRUE(outline)) {
     col.border <- "black"
-  }
-
-  if (is.character(outline)) {
+  } else if (is.character(outline)) {
     col.border <- outline
+  } else {
+    stop("Unsupported value type for parameter outline")
   }
 
+  # restore this parameter when exiting the corrplot function in any way
   oldpar <- par(mar = mar, bg = "white")
   on.exit(par(oldpar), add = TRUE)
+
   ## calculate label-text width approximately
   if (!add) {
     plot.new()
-    xlabwidth <- ylabwidth <- 0
 
+    # Issue #10: code from Sebastien Rochette (github user @statnmap)
+    xlabwidth <- max(strwidth(newrownames, cex = tl.cex))
+    ylabwidth <- max(strwidth(newcolnames, cex = tl.cex))
+    laboffset <- strwidth("W", cex = tl.cex) * tl.offset
+
+    # Issue #10
     for (i in 1:50) {
-      xlim <- c(m1 - 0.5 - xlabwidth,
-                m2 + 0.5 + mm * cl.ratio * (cl.pos == "r"))
-      ylim <- c(n1 - 0.5 - nn * cl.ratio * (cl.pos == "b"),
-                n2 + 0.5 + ylabwidth)
-      plot.window(xlim + c(-0.2,0.2), ylim + c(-0.2,0.2), asp = 1,
-                  xaxs = "i", yaxs = "i")
+      xlim <- c(
+        m1 - 0.5 - laboffset -
+          xlabwidth * (grepl("l", tl.pos) | grepl("d", tl.pos)),
+        m2 + 0.5 + mm * cl.ratio * (cl.pos == "r") +
+          xlabwidth * abs(cos(tl.srt * pi / 180)) * grepl("d", tl.pos)
+      ) + c(-0.35, 0.15) +
+          c(-1,0) * grepl("l", tl.pos) # margin between text and grid
+
+      ylim <- c(
+        n1 - 0.5 - nn * cl.ratio * (cl.pos == "b") - laboffset,
+        n2 + 0.5 + laboffset +
+          ylabwidth * abs(sin(tl.srt * pi / 180)) * grepl("t", tl.pos)
+      ) +
+        c(-0.15, 0) +
+        c(0, -1) * (type == "upper" && tl.pos != "n") + # nasty hack
+        c(0,1) * grepl("d", tl.pos) # margin between text and grid
+
+      # note: the nasty hack above is related to multiple issues
+      # (e.g. #96, #94, #102)
+
+      plot.window(xlim, ylim, asp = 1, xaxs = "i", yaxs = "i")
+
       x.tmp <- max(strwidth(newrownames, cex = tl.cex))
       y.tmp <- max(strwidth(newcolnames, cex = tl.cex))
 
-      if (min(x.tmp - xlabwidth, y.tmp - ylabwidth) < 0.0001) {
+      laboffset.tmp <- strwidth("W", cex = tl.cex) * tl.offset
+      if (max(x.tmp - xlabwidth,
+              y.tmp - ylabwidth,
+              laboffset.tmp - laboffset) < 1e-03) {
         break
       }
 
       xlabwidth <- x.tmp
       ylabwidth <- y.tmp
+
+      laboffset <- laboffset.tmp
+
+      if (i == 50) {
+        warning(c("Not been able to calculate text margin, ",
+                  "please try again with a clean new empty window using ",
+                  "{plot.new(); dev.off()} or reduce tl.cex"))
+      }
     }
-
-    if (tl.pos == "n" || tl.pos == "d") {
-      xlabwidth <- ylabwidth <- 0
-    }
-
-    if (tl.pos == "td") ylabwidth <- 0
-    if (tl.pos == "ld") xlabwidth <- 0
-
-    laboffset <- strwidth("W", cex = tl.cex) * tl.offset
-    xlim <- c(m1 - 0.5 - xlabwidth - laboffset,
-              m2 + 0.5 + mm * cl.ratio * (cl.pos == "r")) + c(-0.35,0.15)
-    ylim <- c(n1 - 0.5 - nn * cl.ratio * (cl.pos == "b"),
-              n2 + 0.5 + ylabwidth * abs(sin(tl.srt * pi / 180)) + laboffset)
-            + c(-0.15, 0.35)
 
     if (.Platform$OS.type == "windows") {
       grDevices::windows.options(width = 7,
@@ -473,21 +590,21 @@ corrplot <- function(corr,
     }
 
     plot.window(xlim = xlim , ylim = ylim,
-                asp = 1, xlab = "", ylab = "", xaxs = "i", yaxs = "i")
+                asp = win.asp, xlab = "", ylab = "", xaxs = "i", yaxs = "i")
   }
 
   ## for: add = TRUE
   laboffset <- strwidth("W", cex = tl.cex) * tl.offset
 
-  ## squares
+  ## background for the cells
   symbols(Pos, add = TRUE, inches = FALSE,
-          squares = rep(1, len.DAT), bg = bg, fg = bg)
+          rectangles = matrix(1, len.DAT, 2), bg = bg, fg = bg)
 
   ## circle
   if (method == "circle" && plotCI == "n") {
-      symbols(Pos, add = TRUE,  inches = FALSE,
-              circles = 0.9 * abs(DAT) ^ 0.5 / 2,
-              fg = col.border, bg = col.fill )
+    symbols(Pos, add = TRUE,  inches = FALSE,
+            circles = asp_rescale_factor * 0.9 * abs(DAT) ^ 0.5 / 2,
+            fg = col.border, bg = col.fill)
   }
 
   ## ellipse
@@ -496,7 +613,7 @@ corrplot <- function(corr,
       k <- seq(0, 2 * pi, length = length)
       x <- cos(k + acos(rho) / 2) / 2
       y <- cos(k - acos(rho) / 2) / 2
-      return(cbind(rbind(x,y), c(NA, NA)))
+      cbind(rbind(x,y), c(NA, NA))
     }
 
     ELL.dat <- lapply(DAT, ell.dat)
@@ -525,8 +642,9 @@ corrplot <- function(corr,
   NA_LABEL_MAX_CHARS <- 2
 
   # renders NA cells
-  if (any(is.na(corr)) && is.character(na.label)) {
-    PosNA <- getPos.NAs(corr)
+  if (is.matrix(PosNA) && nrow(PosNA) > 0) {
+
+    stopifnot(is.matrix(PosNA)) # sanity check
 
     if (na.label == "square") {
       symbols(PosNA, add = TRUE, inches = FALSE,
@@ -546,7 +664,10 @@ corrplot <- function(corr,
 
   ## pie
   if (method == "pie" && plotCI == "n") {
-    symbols(Pos, add = TRUE, inches = FALSE, circles = rep(0.5, len.DAT) * 0.85)
+
+    # Issue #18: Corrplot background circle
+    symbols(Pos, add = TRUE, inches = FALSE,
+            circles = rep(0.5, len.DAT) * 0.85, fg = col.border)
 
     pie.dat <- function(theta, length = 100) {
       k <- seq(pi / 2, pi / 2 - theta, length = 0.5 * length * abs(theta) / pi)
@@ -564,7 +685,6 @@ corrplot <- function(corr,
 
   ## shade
   if (method == "shade" && plotCI == "n") {
-    addshade <- match.arg(addshade)
     symbols(Pos, add = TRUE, inches = FALSE, squares = rep(1, len.DAT),
             bg = col.fill, fg = addgrid.col)
 
@@ -603,19 +723,16 @@ corrplot <- function(corr,
 
   ## square
   if (method == "square" && plotCI == "n") {
-    symbols(Pos, add = TRUE, inches = FALSE,
-            squares = abs(DAT) ^ 0.5, bg = col.fill, fg = col.border)
+    draw_method_square(Pos, DAT, asp_rescale_factor, col.border, col.fill)
   }
 
   ## color
   if (method == "color" && plotCI == "n") {
-      symbols(Pos, add = TRUE, inches = FALSE,
-              squares = rep(1, len.DAT), bg = col.fill, fg = col.border)
+    draw_method_color(Pos, col.border, col.fill)
   }
 
   ## add grid
-  symbols(Pos, add = TRUE, inches = FALSE,  bg = NA,
-          squares = rep(1, len.DAT), fg = addgrid.col)
+  draw_grid(AllCoords, addgrid.col)
 
   if (plotCI != "n") {
 
@@ -634,7 +751,7 @@ corrplot <- function(corr,
     uppNew      <- getPos.Dat(uppCI.mat)[[2]]
 
     if (!method %in% c("circle", "square")) {
-       stop("method shoud be circle or square if draw confidence interval!")
+       stop("Method shoud be circle or square if drawing confidence intervals.")
     }
 
     k1 <- (abs(uppNew) > abs(lowNew))
@@ -704,26 +821,64 @@ corrplot <- function(corr,
     pos.pNew  <- getPos.Dat(p.mat)[[1]]
     pNew      <- getPos.Dat(p.mat)[[2]]
 
-    ind.p <- which(pNew > sig.level)
-    p_inSig <- length(ind.p) > 0
+    if (insig == "label_sig") {
 
-    if (insig == "pch" && p_inSig) {
-      points(pos.pNew[,1][ind.p], pos.pNew[,2][ind.p],
-             pch = pch, col = pch.col, cex = pch.cex, lwd = 2)
-    }
+      # Unless another character is specified, mark sig with *
+      if (!is.character(pch))
+        pch <- "*"
 
-    if (insig == "p-value" && p_inSig) {
-      text(pos.pNew[,1][ind.p], pos.pNew[,2][ind.p],
-        round(pNew[ind.p],2), col = pch.col)
-    }
+      place_points <- function(sig.locs, point) {
+        text(pos.pNew[,1][sig.locs], pos.pNew[,2][sig.locs],
+             labels = point, col = pch.col, cex = pch.cex, lwd = 2)
+      }
 
-    if (insig == "blank" && p_inSig) {
-      symbols(pos.pNew[,1][ind.p], pos.pNew[,2][ind.p], inches = FALSE,
-        squares = rep(1, length(pos.pNew[,1][ind.p])),
-        fg = addgrid.col, bg = bg, add = TRUE)
+      if (length(sig.level) == 1) {
+        place_points(sig.locs = which(pNew < sig.level), point = pch)
+
+      } else {
+        l <- length(sig.level)
+        for (i in seq_along(sig.level)) {
+          iter <- l + 1 - i
+          pchTmp <- paste(rep(pch, i), collapse = "")
+          if (i == length(sig.level)) {
+            locs <- which(pNew < sig.level[iter])
+            if (length(locs)) {
+              place_points(sig.locs = locs, point = pchTmp)
+            }
+          } else {
+            locs <- which(pNew < sig.level[iter] & pNew > sig.level[iter - 1])
+            if (length(locs)) {
+              place_points(sig.locs = locs, point = pchTmp)
+            }
+          }
+        }
+
+      }
+
+    } else {
+
+      ind.p <- which(pNew > sig.level)
+      p_inSig <- length(ind.p) > 0
+
+      if (insig == "pch" && p_inSig) {
+        points(pos.pNew[,1][ind.p], pos.pNew[,2][ind.p],
+               pch = pch, col = pch.col, cex = pch.cex, lwd = 2)
+      }
+
+      if (insig == "p-value" && p_inSig) {
+        text(pos.pNew[,1][ind.p], pos.pNew[,2][ind.p],
+             round(pNew[ind.p],2), col = pch.col)
+      }
+
+      if (insig == "blank" && p_inSig) {
+        symbols(pos.pNew[,1][ind.p], pos.pNew[,2][ind.p], inches = FALSE,
+                squares = rep(1, length(pos.pNew[,1][ind.p])),
+                fg = addgrid.col, bg = bg, add = TRUE)
+      }
     }
   }
 
+  ### color legend
   if (cl.pos != "n") {
     colRange <- assign.color(dat = cl.lim2)
     ind1 <- which(col == colRange[1])
@@ -786,8 +941,8 @@ corrplot <- function(corr,
 
     } else {
       text(pos.xlabel[,1], pos.xlabel[,2], newcolnames, srt = tl.srt,
-        adj = ifelse(tl.srt == 0, c(0.5,0), c(0,0)),
-        col = tl.col, cex = tl.cex, offset = tl.offset, ...)
+           adj = ifelse(tl.srt == 0, c(0.5,0), c(0,0)),
+           col = tl.col, cex = tl.cex, offset = tl.offset, ...)
       text(pos.ylabel[,1], pos.ylabel[,2], newrownames,
            col = tl.col, cex = tl.cex, pos = 2, offset = tl.offset, ...)
     }
@@ -815,4 +970,26 @@ corrplot <- function(corr,
   }
 
   invisible(corr) # reordered correlation matrix
+}
+
+#' @note pure function
+#' @noRd
+draw_method_square <- function(coords, values, asp_rescale_factor, fg, bg) {
+  symbols(coords, add = TRUE, inches = FALSE,
+          squares = asp_rescale_factor * abs(values) ^ 0.5,
+          bg = bg, fg = fg)
+}
+
+#' @note pure function
+#' @noRd
+draw_method_color <- function(coords, fg, bg) {
+  symbols(coords, squares = rep(1, nrow(coords)), fg = fg, bg = bg,
+          add = TRUE, inches = FALSE)
+}
+
+#' @note pure function
+#' @noRd
+draw_grid <- function(coords, fg) {
+  symbols(coords, add = TRUE, inches = FALSE, fg = fg, bg = NA,
+          rectangles = matrix(1, nrow = nrow(coords), ncol = 2))
 }
