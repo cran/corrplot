@@ -4,23 +4,60 @@
 \alias{corrplot}
 \title{A visualization of a correlation matrix.}
 \usage{
-corrplot(corr, method = c("circle", "square", "ellipse", "number", "shade",
-  "color", "pie"), type = c("full", "lower", "upper"), add = FALSE,
-  col = NULL, bg = "white", title = "", is.corr = TRUE, diag = TRUE,
-  outline = FALSE, mar = c(0, 0, 0, 0), addgrid.col = NULL,
-  addCoef.col = NULL, addCoefasPercent = FALSE, order = c("original",
-  "AOE", "FPC", "hclust", "alphabet"), hclust.method = c("complete", "ward",
-  "ward.D", "ward.D2", "single", "average", "mcquitty", "median", "centroid"),
-  addrect = NULL, rect.col = "black", rect.lwd = 2, tl.pos = NULL,
-  tl.cex = 1, tl.col = "red", tl.offset = 0.4, tl.srt = 90,
-  cl.pos = NULL, cl.lim = NULL, cl.length = NULL, cl.cex = 0.8,
-  cl.ratio = 0.15, cl.align.text = "c", cl.offset = 0.5, number.cex = 1,
-  number.font = 2, number.digits = NULL, addshade = c("negative",
-  "positive", "all"), shade.lwd = 1, shade.col = "white", p.mat = NULL,
-  sig.level = 0.05, insig = c("pch", "p-value", "blank", "n", "label_sig"),
-  pch = 4, pch.col = "black", pch.cex = 3, plotCI = c("n", "square",
-  "circle", "rect"), lowCI.mat = NULL, uppCI.mat = NULL, na.label = "?",
-  na.label.col = "black", win.asp = 1, ...)
+corrplot(
+  corr,
+  method = c("circle", "square", "ellipse", "number", "shade", "color", "pie"),
+  type = c("full", "lower", "upper"),
+  add = FALSE,
+  col = NULL,
+  full_col = TRUE,
+  bg = "white",
+  title = "",
+  is.corr = TRUE,
+  diag = TRUE,
+  outline = FALSE,
+  mar = c(0, 0, 0, 0),
+  addgrid.col = NULL,
+  addCoef.col = NULL,
+  addCoefasPercent = FALSE,
+  order = c("original", "AOE", "FPC", "hclust", "alphabet"),
+  hclust.method = c("complete", "ward", "ward.D", "ward.D2", "single", "average",
+    "mcquitty", "median", "centroid"),
+  addrect = NULL,
+  rect.col = "black",
+  rect.lwd = 2,
+  tl.pos = NULL,
+  tl.cex = 1,
+  tl.col = "red",
+  tl.offset = 0.4,
+  tl.srt = 90,
+  cl.pos = NULL,
+  cl.lim = NULL,
+  cl.length = NULL,
+  cl.cex = 0.8,
+  cl.ratio = 0.15,
+  cl.align.text = "c",
+  cl.offset = 0.5,
+  number.cex = 1,
+  number.font = 2,
+  number.digits = NULL,
+  addshade = c("negative", "positive", "all"),
+  shade.lwd = 1,
+  shade.col = "white",
+  p.mat = NULL,
+  sig.level = 0.05,
+  insig = c("pch", "p-value", "blank", "n", "label_sig"),
+  pch = 4,
+  pch.col = "black",
+  pch.cex = 3,
+  plotCI = c("n", "square", "circle", "rect"),
+  lowCI.mat = NULL,
+  uppCI.mat = NULL,
+  na.label = "?",
+  na.label.col = "black",
+  win.asp = 1,
+  ...
+)
 }
 \arguments{
 \item{corr}{The correlation matrix to visualize, must be square if
@@ -48,6 +85,9 @@ otherwise a new plot is created.}
 \item{col}{Vector, the color of glyphs. It is distributed uniformly in
 \code{cl.lim}. If NULL, \code{col} will be
 \code{colorRampPalette(col2)(200)}, see example about col2.}
+
+\item{full_col}{Logical, whether to use the entire color spectrum
+defined in \code{col} for visualization.}
 
 \item{bg}{The background color.}
 
@@ -218,7 +258,7 @@ sign, the smaller circle will be wiped away, thus forming a ring. Method
 currently compatible only with methods "circle" and "square".}
 
 \item{\dots}{Additional arguments passing to function \code{text} for drawing
-text lable.}
+text label.}
 }
 \value{
 (Invisibly) returns a reordered correlation matrix.

@@ -30,6 +30,9 @@
 #'   \code{cl.lim}. If NULL, \code{col} will be
 #'   \code{colorRampPalette(col2)(200)}, see example about col2.
 #'
+#' @param full_col Logical, whether to use the entire color spectrum
+#'   defined in \code{col} for visualization.
+#'
 #' @param bg The background color.
 #'
 #' @param title Character, title of the graph.
@@ -199,7 +202,7 @@
 #'   currently compatible only with methods "circle" and "square".
 #'
 #' @param \dots Additional arguments passing to function \code{text} for drawing
-#'   text lable.
+#'   text label.
 #'
 #' @return (Invisibly) returns a reordered correlation matrix.
 #'
@@ -240,7 +243,7 @@
 corrplot <- function(corr,
   method = c("circle", "square", "ellipse", "number", "shade", "color", "pie"),
   type = c("full", "lower", "upper"), add = FALSE,
-  col = NULL, bg = "white", title = "", is.corr = TRUE,
+  col = NULL, full_col = TRUE, bg = "white", title = "", is.corr = TRUE,
   diag = TRUE, outline = FALSE, mar = c(0, 0, 0, 0),
   addgrid.col = NULL, addCoef.col = NULL, addCoefasPercent = FALSE,
 
@@ -297,7 +300,9 @@ corrplot <- function(corr,
     addgrid.col <- switch(method, color = NA, shade = NA, "grey")
   }
 
-  if (any(corr < cl.lim[1]) || any(corr > cl.lim[2])) {
+  # Issue #142
+  # checks for all values that are not missing
+  if (any(corr[!is.na(corr)] < cl.lim[1]) || any(corr[!is.na(corr)] > cl.lim[2])) {
     stop("color limits should cover matrix")
   }
 
@@ -311,7 +316,11 @@ corrplot <- function(corr,
       # if not a correlation matrix and the diagonal is hidden,
       # we need to compute limits from all cells except the diagonal
       corr_tmp <- corr
-      diag(corr_tmp) <- ifelse(diag, diag(corr_tmp), NA)
+      diag(corr_tmp) <- ifelse(
+        rep(diag, length(diag(corr_tmp))),
+        diag(corr_tmp),
+        NA
+      )
       cl.lim <- c(min(corr_tmp, na.rm = TRUE), max(corr_tmp, na.rm = TRUE))
     }
   }
@@ -485,13 +494,28 @@ corrplot <- function(corr,
 
   rm(expand_expression) # making sure the function is only used here
 
+  # scale data to range [lower, upper]
+  # if the dataspan is invalid we use the coller in the middle of the interval
+  scale_to_range <- function(data, lower = 1, upper) {
+    dataspan <- max(data) - min(data)
+    if (dataspan == 0)
+      rep((upper - lower) / 2, length(data)) # middle color
+    else
+      (upper - lower) * (data - min(data)) / dataspan + lower # full range
+  }
+
   ## assign colors
   assign.color <- function(dat = DAT, color = col) {
-    newcorr <- (dat + 1) / 2
-    newcorr[newcorr <= 0]  <- 0
-    newcorr[newcorr >= 1]  <- 1 - 1e-16
-
-    color[floor(newcorr * length(color)) + 1] # new color returned
+    if (full_col) {
+      # Rescale data before computing color to ensure that all colors are used.
+      newcorr <- scale_to_range(data = dat, lower = 1, upper = length(color))
+      color[floor(newcorr)]
+    } else {
+      newcorr <- (dat + 1) / 2
+      newcorr[newcorr <= 0]  <- 0
+      newcorr[newcorr >= 1]  <- 1 - 1e-16
+      color[floor(newcorr * length(color)) + 1] # new color returned
+    }
   }
 
   col.fill <- assign.color()
@@ -526,7 +550,7 @@ corrplot <- function(corr,
   }
 
   # restore this parameter when exiting the corrplot function in any way
-  oldpar <- par(mar = mar, bg = "white")
+  oldpar <- par(mar = mar, bg = par()$bg)
   on.exit(par(oldpar), add = TRUE)
 
   ## calculate label-text width approximately
@@ -545,17 +569,15 @@ corrplot <- function(corr,
           xlabwidth * (grepl("l", tl.pos) | grepl("d", tl.pos)),
         m2 + 0.5 + mm * cl.ratio * (cl.pos == "r") +
           xlabwidth * abs(cos(tl.srt * pi / 180)) * grepl("d", tl.pos)
-      ) + c(-0.35, 0.15) +
-          c(-1,0) * grepl("l", tl.pos) # margin between text and grid
+      ) #+ c(-0.35, 0.15)
 
       ylim <- c(
         n1 - 0.5 - nn * cl.ratio * (cl.pos == "b") - laboffset,
         n2 + 0.5 + laboffset +
           ylabwidth * abs(sin(tl.srt * pi / 180)) * grepl("t", tl.pos)
       ) +
-        c(-0.15, 0) +
-        c(0, -1) * (type == "upper" && tl.pos != "n") + # nasty hack
-        c(0,1) * grepl("d", tl.pos) # margin between text and grid
+        #c(-0.15, 0) +
+        c(0, -1) * (type == "upper" && tl.pos != "n")  # nasty hack
 
       # note: the nasty hack above is related to multiple issues
       # (e.g. #96, #94, #102)
@@ -588,6 +610,9 @@ corrplot <- function(corr,
       grDevices::windows.options(width = 7,
                                  height = 7 * diff(ylim) / diff(xlim))
     }
+
+    xlim <- xlim + diff(xlim) * 0.01 * c(-1, 1)
+    ylim <- ylim + diff(ylim) * 0.01 * c(-1, 1)
 
     plot.window(xlim = xlim , ylim = ylim,
                 asp = win.asp, xlab = "", ylab = "", xaxs = "i", yaxs = "i")
@@ -632,9 +657,9 @@ corrplot <- function(corr,
   stopifnot(number.digits >= 0)       # is non-negative number
 
   if (method == "number" && plotCI == "n") {
+    x <- (DAT - int) * ifelse(addCoefasPercent, 100, 1) / zoom
     text(Pos[,1], Pos[,2], font = number.font, col = col.fill,
-         labels = round((DAT - int) * ifelse(addCoefasPercent, 100, 1) / zoom,
-                        number.digits),
+         labels = format(round(x, number.digits), nsmall = number.digits),
          cex = number.cex)
   }
 
