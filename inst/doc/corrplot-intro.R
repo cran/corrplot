@@ -4,7 +4,28 @@ knitr::opts_chunk$set(
   out.extra = 'style="display:block; margin: auto"',
   fig.align = "center",
   fig.path = "webimg/",
+  fig.width = 6,
+  fig.height = 6,
   dev = "png")
+
+get_os <- function(){
+  sysinf <- Sys.info()
+  if (!is.null(sysinf)){
+    os <- sysinf['sysname']
+    if (os == 'Darwin')
+      os <- "osx"
+  } else { ## mystery machine
+    os <- .Platform$OS.type
+    if (grepl("^darwin", R.version$os))
+      os <- "osx"
+    if (grepl("linux-gnu", R.version$os))
+      os <- "linux"
+  }
+  tolower(os)
+}
+if(get_os() =='windows' & capabilities('cairo')){
+  knitr::opts_chunk$set(dev.args = list(type="cairo"))
+}
 
 ## ----methods------------------------------------------------------------------
 library(corrplot)
@@ -18,31 +39,31 @@ corrplot(M, method = "color")
 corrplot(M, method = "pie")
 
 ## ----layout-------------------------------------------------------------------
-corrplot(M, type = "upper")
-corrplot(M, type = "upper")
+corrplot(M, type = "lower")
 
 ## ----mixed--------------------------------------------------------------------
 corrplot.mixed(M)
 corrplot.mixed(M, lower.col = "black", number.cex = .7)
-corrplot.mixed(M, lower = "ellipse", upper = "circle")
 corrplot.mixed(M, lower = "square", upper = "circle", tl.col = "black")
 
 ## ----order--------------------------------------------------------------------
 corrplot(M, order = "AOE")
 corrplot(M, order = "hclust")
 corrplot(M, order = "FPC")
-corrplot(M, order = "alphabet")
 
 ## ----rectangles---------------------------------------------------------------
-corrplot(M, order = "hclust", addrect = 2)
 corrplot(M, order = "hclust", addrect = 3)
 
 ## ----hclust-lightblue---------------------------------------------------------
 # Change background color to lightblue
-corrplot(M, type = "upper", order = "hclust",
+corrplot(M, type = "upper", order = "hclust", cl.pos = "n",
          col = c("black", "white"), bg = "lightblue")
 
 ## ----color--------------------------------------------------------------------
+## color example, suitable for matrix in [-N, 0] or [0, N]
+col0 <- colorRampPalette(c("white", "cyan", "#007FFF", "blue","#00007F"))
+
+## diverging color example, suitable for matrix in [-N, N]
 col1 <- colorRampPalette(c("#7F0000", "red", "#FF7F00", "yellow", "white",
                            "cyan", "#007FFF", "blue", "#00007F"))
 col2 <- colorRampPalette(c("#67001F", "#B2182B", "#D6604D", "#F4A582",
@@ -61,27 +82,20 @@ corrplot(M, order = "hclust", addrect = 2, col = col4(10))
 corrplot(M, order = "hclust", addrect = 2, col = whiteblack, bg = "gold2")
 
 ## ----hclust-stdcolors---------------------------------------------------------
-corrplot(M, order = "hclust", addrect = 2, col = heat.colors(100))
-corrplot(M, order = "hclust", addrect = 2, col = terrain.colors(100))
 corrplot(M, order = "hclust", addrect = 2, col = cm.colors(100))
-corrplot(M, order = "hclust", addrect = 2, col = gray.colors(100))
 
 ## ----hclust-rcolorbrewer------------------------------------------------------
 library(RColorBrewer)
 
 corrplot(M, type = "upper", order = "hclust",
          col = brewer.pal(n = 8, name = "RdBu"))
-corrplot(M, type = "upper", order = "hclust",
-         col = brewer.pal(n = 8, name = "RdYlBu"))
-corrplot(M, type = "upper", order = "hclust",
-         col = brewer.pal(n = 8, name = "PuOr"))
 
 ## ----color-label--------------------------------------------------------------
-## remove color legend and text legend 
-corrplot(M, order = "AOE", cl.pos = "n", tl.pos = "n")  
+## remove color legend, text legend and principal diagonal glyph
+corrplot(M, order = "AOE", cl.pos = "n", tl.pos = "n", diag = FALSE)  
 
 ## bottom  color legend, diagonal text legend, rotate text label
-corrplot(M, order = "AOE", cl.pos = "b", tl.pos = "d", tl.srt = 60)
+corrplot(M, order = "AOE", cl.pos = "b", tl.pos = "d")
 
 ## a wider color legend with numbers right aligned
 corrplot(M, order = "AOE", cl.ratio = 0.2, cl.align = "r")
@@ -89,13 +103,23 @@ corrplot(M, order = "AOE", cl.ratio = 0.2, cl.align = "r")
 ## text labels rotated 45 degrees
 corrplot(M, type = "lower", order = "hclust", tl.col = "black", tl.srt = 45)
 
+## ----cl_lim-------------------------------------------------------------------
+# when is.corr=TRUE, cl.lim only affect the color legend
+# If you change it, the color on matrix is still assigned on [-1, 1]
+corrplot(M/2)
+corrplot(M/2, cl.lim=c(-0.5,0.5))
+
+# when is.corr=FALSE, cl.lim is also used to assign colors
+# if the matrix have both positive and negative values
+# the matrix transformation keep every values positive and negative
+corrplot(M*2, is.corr = FALSE, cl.lim=c(-2, 2))
+
 ## ----non-corr-----------------------------------------------------------------
-corrplot(abs(M),order = "AOE", col = col3(200), cl.lim = c(0, 1))
-## visualize a  matrix in [-100, 100]
-ran <- round(matrix(runif(225, -100,100), 15))
-corrplot(ran, is.corr = FALSE, method = "square")
-## a beautiful color legend 
-corrplot(ran, is.corr = FALSE, method = "ellipse", cl.lim = c(-100, 100))
+# for showing the usage of cl.lim, run with warning
+corrplot(M*2, is.corr = FALSE, cl.lim=c(-2, 2) * 2)
+
+## matrix in [50, 60]
+corrplot(abs(M)*10+50, is.corr = FALSE, cl.lim=c(50, 60), col=col0(10))
 
 ## ----non-corr-asp-------------------------------------------------------------
 ran <- matrix(rnorm(70), ncol = 7)
@@ -110,8 +134,8 @@ corrplot(M2, na.label = "NA")
 
 ## ----plotmath-----------------------------------------------------------------
 M2 <- M[1:5,1:5]
-colnames(M2) <- c("alpha", "beta", ":alpha+beta", ":a[0]", "=a[beta]")
-rownames(M2) <- c("alpha", "beta", NA, "$a[0]", "$ a[beta]")
+colnames(M2) <- c("alpha", "beta", ":alpha+beta", ":alpha[0]", "=alpha[beta]")
+rownames(M2) <- c("$alpha", "$beta", NA, "$alpha[0]", "$alpha[beta]")
 corrplot(M2)
 
 ## ----test---------------------------------------------------------------------
@@ -154,51 +178,4 @@ corrplot(M, p.mat = res1$p, method = "color", type = "upper",
          insig = "label_sig", pch.col = "white", order = "AOE")
 corrplot(M, p.mat = res1$p, insig = "label_sig", pch.col = "white",
          pch = "p<.05", pch.cex = .5, order = "AOE")
-
-## ----pmat---------------------------------------------------------------------
-# matrix of the p-value of the correlation
-p.mat <- cor.mtest(mtcars)$p
-head(p.mat[, 1:5])
-
-# Specialized the insignificant value according to the significant level
-corrplot(M, type = "upper", order = "hclust", 
-         p.mat = p.mat, sig.level = 0.01)
-
-# Leave blank on no significant coefficient
-corrplot(M, type = "upper", order = "hclust", 
-         p.mat = p.mat, sig.level = 0.01, insig = "blank")
-
-## ----customized---------------------------------------------------------------
-col <- colorRampPalette(c("#BB4444", "#EE9988", "#FFFFFF", "#77AADD", "#4477AA"))
-corrplot(M, method = "color", col = col(200),
-         type = "upper", order = "hclust", number.cex = .7,
-         addCoef.col = "black", # Add coefficient of correlation
-         tl.col = "black", tl.srt = 90, # Text label color and rotation
-         # Combine with significance
-         p.mat = p.mat, sig.level = 0.01, insig = "blank", 
-         # hide correlation coefficient on the principal diagonal
-         diag = FALSE)
-
-## ----large_matrix-------------------------------------------------------------
-
-# generating large feature matrix (cols=features, rows=samples)
-num_features <- 60 # how many features
-num_samples <- 300 # how many samples
-DATASET <- matrix(runif(num_features * num_samples),
-               nrow = num_samples, ncol = num_features)
-
-# setting some dummy names for the features e.g. f23
-colnames(DATASET) <- paste0("f", 1:ncol(DATASET))
-
-# let's make 30% of all features to be correlated with feature "f1"
-num_feat_corr <- num_features * .3
-idx_correlated_features <- as.integer(seq(from = 1,
-                                          to = num_features,
-                                          length.out = num_feat_corr))[-1]
-for (i in idx_correlated_features) {
-  DATASET[,i] <- DATASET[,1] + runif(num_samples) # adding some noise
-}
-
-corrplot(cor(DATASET), diag = FALSE, order = "FPC",
-         tl.pos = "td", tl.cex = 0.5, method = "color", type = "upper")
 
