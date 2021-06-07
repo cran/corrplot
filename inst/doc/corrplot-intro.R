@@ -148,7 +148,8 @@ corrplot(M, p.mat = res1$p, sig.level = .05)
 corrplot(M, p.mat = res1$p, sig.level = .01)
 
 ## leave blank on no significant coefficient
-corrplot(M, p.mat = res1$p, insig = "blank")
+corrplot(M, p.mat = res1$p, method = "circle", type = "lower", insig='blank',
+         addCoef.col ='black', order = "AOE", diag=FALSE)
 
 ## add p-values on no significant coefficient
 corrplot(M, p.mat = res1$p, insig = "p-value")
@@ -161,21 +162,21 @@ corrplot(M, p.mat = res1$p, order = "hclust", insig = "pch", addrect = 3)
 
 ## ----ci-----------------------------------------------------------------------
 corrplot(M, low = res1$lowCI, upp = res1$uppCI, order = "hclust",
-         rect.col = "navy", plotC = "rect", cl.pos = "n")
+         tl.pos = 'd', rect.col = "navy", plotC = "rect", cl.pos = "n")
 corrplot(M, p.mat = res1$p, low = res1$lowCI, upp = res1$uppCI,
-         order = "hclust", pch.col = "red", sig.level = 0.01,
+         order = "hclust", pch.col = "red", sig.level = 0.01, tl.pos = 'd',
          addrect = 3, rect.col = "navy", plotC = "rect", cl.pos = "n")
 
 ## ----ci_with_label------------------------------------------------------------
 res1 <- cor.mtest(mtcars, conf.level = .95)
 
-corrplot(M, p.mat = res1$p, insig = "label_sig",
+corrplot(M, p.mat = res1$p, diag = FALSE, tl.pos = 'd', insig = "label_sig",
          sig.level = c(.001, .01, .05), pch.cex = .9, pch.col = "white")
-corrplot(M, p.mat = res1$p, method = "color",
+corrplot(M, p.mat = res1$p, diag = FALSE, tl.pos = 'd',  method = "color",
          insig = "label_sig", pch.col = "white")
-corrplot(M, p.mat = res1$p, method = "color", type = "upper",
-         sig.level = c(.001, .01, .05), pch.cex = .9,
+corrplot(M, p.mat = res1$p, method = "color", diag = FALSE, type = "upper",
+         sig.level = c(.001, .01, .05), pch.cex = .9, 
          insig = "label_sig", pch.col = "white", order = "AOE")
-corrplot(M, p.mat = res1$p, insig = "label_sig", pch.col = "white",
-         pch = "p<.05", pch.cex = .5, order = "AOE")
+corrplot(M, p.mat = res1$p, diag = FALSE, tl.pos = 'd', insig = "label_sig", 
+         pch.col = "white", pch = "p<.05", pch.cex = .5, order = "AOE")
 

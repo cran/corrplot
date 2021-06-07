@@ -210,7 +210,10 @@
 #' @param \dots Additional arguments passing to function \code{text} for drawing
 #'   text label.
 #'
-#' @return (Invisibly) returns a reordered correlation matrix.
+#' @return (Invisibly) returns a \code{list(corr, corrTrans)}.
+#' \code{corr} is a reordered correlation matrix for plotting.
+#' \code{corrPos} is a matrix with x, y, corr and p.value(if p.mat is not NULL)
+#' column, which x and y are the position on the correlation matrix plot.
 #'
 #' @details \code{corrplot} function offers flexible ways to visualize
 #'   correlation matrix, lower and upper bound of confidence interval matrix.
@@ -288,7 +291,6 @@ corrplot <- function(corr,
   addshade <- match.arg(addshade)
   insig <- match.arg(insig)
   plotCI <- match.arg(plotCI)
-
 
 
   # rescale symbols within the corrplot based on win.asp parameter
@@ -580,13 +582,9 @@ corrplot <- function(corr,
       ylim <- c(
         n1 - 0.5 - nn * cl.ratio * (cl.pos == "b") - laboffset,
         n2 + 0.5 + laboffset +
-          ylabwidth * abs(sin(tl.srt * pi / 180)) * grepl("t", tl.pos)
-      ) +
-        #c(-0.15, 0) +
-        c(0, -1) * (type == "upper" && tl.pos != "n")  # nasty hack
-
-      # note: the nasty hack above is related to multiple issues
-      # (e.g. #96, #94, #102)
+          ylabwidth * abs(sin(tl.srt * pi / 180)) * grepl("t", tl.pos) +
+          ylabwidth * abs(sin(tl.srt * pi / 180)) * (type=='lower') * grepl("d", tl.pos)
+      ) #+ c(-0.15, 0)
 
       plot.window(xlim, ylim, asp = 1, xaxs = "i", yaxs = "i")
 
@@ -844,10 +842,28 @@ corrplot <- function(corr,
     }
   }
 
+
+  ## add numbers
+  if (!is.null(addCoef.col) && method != "number") {
+    text(Pos[,1], Pos[,2],  col = addCoef.col,
+         labels = round((DAT - int) * ifelse(addCoefasPercent, 100, 1) / zoom,
+                        number.digits),
+         cex = number.cex, font = number.font)
+  }
+
+
   if (!is.null(p.mat) && insig != "n") {
     if (order != "original") {
       p.mat <- p.mat[ord, ord]
     }
+
+    if(!is.null(rownames(p.mat)) | !is.null(rownames(p.mat))) {
+      if(!all(colnames(p.mat)==colnames(corr)) |
+         !all(rownames(p.mat)==rownames(corr))) {
+        warning('p.mat and corr may be not paired, their rownames and colnames are not totally same!')
+      }
+    }
+
 
     pos.pNew  <- getPos.Dat(p.mat)[[1]]
     pNew      <- getPos.Dat(p.mat)[[2]]
@@ -908,6 +924,7 @@ corrplot <- function(corr,
       }
     }
   }
+
 
   ### color legend
   if (cl.pos != "n") {
@@ -983,13 +1000,7 @@ corrplot <- function(corr,
 
   title(title, ...)
 
-  ## add numbers
-  if (!is.null(addCoef.col) && method != "number") {
-    text(Pos[,1], Pos[,2],  col = addCoef.col,
-         labels = round((DAT - int) * ifelse(addCoefasPercent, 100, 1) / zoom,
-                        number.digits),
-         cex = number.cex, font = number.font)
-  }
+
 
   ## add grid, in case of the grid is ate when "diag=FALSE"
   if (type == "full" && plotCI == "n" && !is.null(addgrid.col)) {
@@ -1002,7 +1013,18 @@ corrplot <- function(corr,
                     col = rect.col, lwd = rect.lwd)
   }
 
-  invisible(corr) # reordered correlation matrix
+  corrPos = cbind(Pos, DAT)
+  colnames(corrPos) = c('x', 'y', 'corr')
+  if(!is.null(p.mat)) {
+    corrPos = cbind(corrPos, pNew)
+    colnames(corrPos)[4] = c('p.value')
+  }
+  rownames(corrPos) = NULL
+  corrPos = corrPos[order(corrPos[,1],corrPos[,2]),]
+
+  res = list(corr=corr, corrPos=corrPos)
+
+  invisible(res) # reordered correlation matrix, and Position
 }
 
 #' @note pure function
