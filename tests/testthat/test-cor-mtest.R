@@ -1,8 +1,8 @@
-context("cor.mtest - significance test and confidence intervals")
+context('cor.mtest - significance test and confidence intervals')
 
-test_that("Basic usage of cor.mtest", {
+test_that('Basic usage of cor.mtest', {
 
-  res1 <- cor.mtest(mtcars)
+  res1 = cor.mtest(mtcars)
 
   expect_true(is.list(res1))
   expect_true(is.matrix(res1$p))
@@ -16,10 +16,10 @@ test_that("Basic usage of cor.mtest", {
 
 })
 
-test_that("Additional params", {
+test_that('Additional params', {
   expect_silent(cor.mtest(mtcars, conf.level = 0.95))
-  expect_silent(cor.mtest(mtcars, method = "spearman", exact = FALSE))
+  expect_silent(cor.mtest(mtcars, method = 'spearman', exact = FALSE))
 
   # unknown parameters are silently ignored
-  expect_silent(cor.mtest(mtcars, dummy = "dummy"))
+  expect_silent(cor.mtest(mtcars, dummy = 'dummy'))
 })
