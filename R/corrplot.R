@@ -23,12 +23,14 @@
 #'   \code{'lower'}, display full matrix, lower triangular or upper triangular
 #'   matrix.
 #'
-#' @param add Logical, if \code{TRUE}, the graph is added to an existing plot,
-#'   otherwise a new plot is created.
 #'
 #' @param col Vector, the color of glyphs. It is distributed uniformly in
-#'   \code{col.lim} interval. If NULL, \code{col} will be
-#'   \code{colorRampPalette(col2)(200)}, see example about col2.
+#'   \code{col.lim} interval.
+#'   If \code{is.corr} is \code{TRUE}, \code{col} will be \code{COL2('RdBu', 200)}.
+#'   If \code{is.corr} is \code{FALSE} and all values of the matrix are positive or negative,
+#'   \code{col} will be \code{COL2('RdBu', 200)}.
+#'   If \code{is.corr} is \code{FALSE} and the values of the matrix are partly
+#'   positive and partly negative, \code{col} will be \code{COL1('YlOrBr', 200)}.
 #'
 #' @param col.lim The limits \code{(x1, x2)} interval for assigning color by
 #'   \code{col}. If \code{NULL},
@@ -48,6 +50,9 @@
 #' @param is.corr Logical, whether the input matrix is a correlation matrix or
 #'   not. We can visualize the non-correlation matrix by setting
 #'   \code{is.corr = FALSE}.
+#'
+#' @param add Logical, if \code{TRUE}, the graph is added to an existing plot,
+#'   otherwise a new plot will be created.
 #'
 #' @param diag Logical, whether display the correlation coefficients on the
 #'   principal diagonal.
@@ -101,6 +106,7 @@
 #'   \code{'n'}. \code{'lt'}(default if \code{type=='full'}) means left and top,
 #'   \code{'ld'}(default if \code{type=='lower'}) means left and diagonal,
 #'   \code{'td'}(default if \code{type=='upper'}) means top and diagonal(near),
+#'   \code{'l'} means left,
 #'   \code{'d'} means diagonal, \code{'n'} means don't add text-label.
 #'
 #' @param tl.cex Numeric, for the size of text label (variable names).
@@ -253,9 +259,10 @@
 #' @export
 corrplot = function(corr,
   method = c('circle', 'square', 'ellipse', 'number', 'shade', 'color', 'pie'),
-  type = c('full', 'lower', 'upper'), add = FALSE,
-  col = NULL, col.lim = NULL, bg = 'white', title = '', is.corr = TRUE,
-  diag = TRUE, outline = FALSE, mar = c(0, 0, 0, 0),
+  type = c('full', 'lower', 'upper'), col = NULL, col.lim = NULL, bg = 'white',
+  title = '', is.corr = TRUE, add = FALSE,   diag = TRUE, outline = FALSE,
+  mar = c(0, 0, 0, 0),
+
   addgrid.col = NULL, addCoef.col = NULL, addCoefasPercent = FALSE,
 
   order = c('original', 'AOE', 'FPC', 'hclust', 'alphabet'),
@@ -342,8 +349,8 @@ corrplot = function(corr,
   if(is.corr) {
     # check the interval if expecting a correlation matrix
     # otherwise, the values can be any number
-    if (min(corr, na.rm = TRUE) < -1 - .Machine$double.eps ^ .75 ||
-        max(corr, na.rm = TRUE) >  1 + .Machine$double.eps ^ .75 ) {
+    if (min(corr, na.rm = TRUE) < -1 - .Machine$double.eps ^ 0.75 ||
+        max(corr, na.rm = TRUE) >  1 + .Machine$double.eps ^ 0.75) {
       stop('The matrix is not in [-1, 1]!')
     }
 
@@ -351,7 +358,7 @@ corrplot = function(corr,
     SpecialCorr = 1
 
     if(col.lim[1] < -1 | col.lim[2] > 1) {
-      stop('col.lim should be within the interval [-1,1]')
+      stop('col.lim should be within the interval [-1, 1]')
     }
   }
 
@@ -396,12 +403,6 @@ corrplot = function(corr,
       SpecialCorr = 1
     }
 
-    # now, the zoom might still be Inf when c_max and c_min were both zero
-    if (zoom == Inf) {
-      stopifnot(c_max == 0 && c_min == 0) # check the assumption
-      zoom = 0
-    }
-
     corr = (intercept + corr) * zoom
   }
 
@@ -410,16 +411,23 @@ corrplot = function(corr,
 
 
 
-  if (is.null(col)) {
-    col = colorRampPalette(c('#67001F', '#B2182B', '#D6604D', '#F4A582',
-                              '#FDDBC7', '#FFFFFF', '#D1E5F0', '#92C5DE',
-                              '#4393C3', '#2166AC', '#053061'))(200)
+  if (is.null(col) & is.corr) {
+    col = COL2('RdBu', 200)
+  }
+
+  if (is.null(col) & !is.corr) {
+    if(col.lim[1] * col.lim[2] < 0) {
+      col = COL2('RdBu', 200)
+    } else {
+      col = COL1('YlOrBr', 200)
+    }
+
   }
 
   n = nrow(corr)
   m = ncol(corr)
-  min.nm = min(n,m)
-  ord = seq_len(min.nm)
+  min.nm = min(n, m)
+  ord = 1:min.nm
 
   if (order != 'original') {
     ord = corrMatOrder(corr, order = order, hclust.method = hclust.method)
@@ -428,10 +436,10 @@ corrplot = function(corr,
 
   ## set up variable names
   if (is.null(rownames(corr))) {
-    rownames(corr) = seq_len(n)
+    rownames(corr) = 1:n
   }
   if (is.null(colnames(corr))) {
-    colnames(corr) = seq_len(m)
+    colnames(corr) = 1:m
   }
 
   # assigns Inf to cells in the matrix depending on the type paramter
@@ -454,12 +462,12 @@ corrplot = function(corr,
     Dat = tmp[is.finite(tmp)]
     ind  = which(is.finite(tmp), arr.ind = TRUE)
     Pos = ind
-    Pos[,1] =  ind[,2]
-    Pos[,2] = -ind[,1] + 1 + n
+    Pos[, 1] =  ind[, 2]
+    Pos[, 2] = -ind[, 1] + 1 + n
 
     PosName = ind
-    PosName[,1] = colnames(mat)[ind[,2]]
-    PosName[,2] = rownames(mat)[ind[,1]]
+    PosName[, 1] = colnames(mat)[ind[, 2]]
+    PosName[, 2] = rownames(mat)[ind[, 1]]
     return(list(Pos, Dat, PosName))
   }
 
@@ -469,8 +477,8 @@ corrplot = function(corr,
     tmp = apply_mat_filter(mat)
     ind = which(is.na(tmp), arr.ind = TRUE)
     Pos = ind
-    Pos[,1] =  ind[,2]
-    Pos[,2] = -ind[,1] + 1 + n
+    Pos[, 1] =  ind[, 2]
+    Pos[, 2] = -ind[, 1] + 1 + n
     return(Pos)
   }
 
@@ -491,14 +499,14 @@ corrplot = function(corr,
   AllCoords = rbind(Pos, PosNA)
 
   # rows
-  n2 = max(AllCoords[,2])
-  n1 = min(AllCoords[,2])
+  n2 = max(AllCoords[, 2])
+  n1 = min(AllCoords[, 2])
 
   nn = n2 - n1
 
   # columns
-  m2 = max(AllCoords[,1])
-  m1 = min(AllCoords[,1])
+  m2 = max(AllCoords[, 1])
+  m1 = min(AllCoords[, 1])
 
   # Issue #19: legend color bar width 0 when using just one column matrix
   # also discussed here: http://stackoverflow.com/questions/34638555/
@@ -627,7 +635,7 @@ corrplot = function(corr,
     xlim = xlim + diff(xlim) * 0.01 * c(-1, 1)
     ylim = ylim + diff(ylim) * 0.01 * c(-1, 1)
 
-    plot.window(xlim = xlim , ylim = ylim,
+    plot.window(xlim = xlim, ylim = ylim,
                 asp = win.asp, xlab = '', ylab = '', xaxs = 'i', yaxs = 'i')
   }
 
@@ -651,12 +659,12 @@ corrplot = function(corr,
       k = seq(0, 2 * pi, length = length)
       x = cos(k + acos(rho) / 2) / 2
       y = cos(k - acos(rho) / 2) / 2
-      cbind(rbind(x,y), c(NA, NA))
+      cbind(rbind(x, y), c(NA, NA))
     }
 
     ELL.dat = lapply(DAT, ell.dat)
     ELL.dat2 = 0.85 * matrix(unlist(ELL.dat), ncol = 2, byrow = TRUE)
-    ELL.dat2 = ELL.dat2  + Pos[rep(1:length(DAT),each = 100),]
+    ELL.dat2 = ELL.dat2  + Pos[rep(1: length(DAT), each = 100), ]
     polygon(ELL.dat2, border = col.border, col = col.fill)
   }
 
@@ -670,7 +678,7 @@ corrplot = function(corr,
 
   if (method == 'number' && plotCI == 'n') {
     x = (DAT - int) * ifelse(addCoefasPercent, 100, 1) / zoom
-    text(Pos[,1], Pos[,2], font = number.font, col = col.fill,
+    text(Pos[, 1], Pos[, 2], font = number.font, col = col.fill,
          labels = format(round(x, number.digits), nsmall = number.digits),
          cex = number.cex)
   }
@@ -690,7 +698,7 @@ corrplot = function(corr,
     } else if (nchar(na.label) %in% 1:NA_LABEL_MAX_CHARS) {
       symbols(PosNA, add = TRUE, inches = FALSE,
               squares = rep(1, nrow(PosNA)), fg = bg, bg = bg)
-      text(PosNA[,1], PosNA[,2], font = number.font,
+      text(PosNA[, 1], PosNA[, 2], font = number.font,
            col = na.label.col,
            labels = na.label, cex = number.cex, ...)
     } else {
@@ -710,13 +718,13 @@ corrplot = function(corr,
       k = seq(pi / 2, pi / 2 - theta, length = 0.5 * length * abs(theta) / pi)
       x = c(0, cos(k) / 2, 0)
       y = c(0, sin(k) / 2, 0)
-      cbind(rbind(x,y), c(NA, NA)) # pie.dat returned
+      cbind(rbind(x, y), c(NA, NA)) # pie.dat returned
     }
 
     PIE.dat = lapply(DAT * 2 * pi, pie.dat)
     len.pie = unlist(lapply(PIE.dat, length)) / 2
     PIE.dat2 = 0.85 * matrix(unlist(PIE.dat), ncol = 2, byrow = TRUE)
-    PIE.dat2 = PIE.dat2  + Pos[rep(1:length(DAT), len.pie),]
+    PIE.dat2 = PIE.dat2  + Pos[rep(1:length(DAT), len.pie), ]
     polygon(PIE.dat2, border = 'black', col = col.fill)
   }
 
@@ -737,25 +745,25 @@ corrplot = function(corr,
 
       if ((addshade == 'positive' || addshade == 'all') && rho > 0) {
         dat = cbind(c(x1, x1, x), c(y, y1, y1),
-                     c(x, x2, x2), c(y2, y2 ,y))
+                     c(x, x2, x2), c(y2, y2, y))
       }
 
       if ((addshade == 'negative' || addshade == 'all') && rho < 0) {
         dat = cbind(c(x1, x1, x), c(y, y2, y2),
-                     c(x, x2, x2), c(y1, y1 ,y))
+                     c(x, x2, x2), c(y1, y1, y))
       }
 
       return(t(dat))
     }
 
     pos_corr = rbind(cbind(Pos, DAT))
-    pos_corr2 = split(pos_corr, 1:nrow(pos_corr))
+    pos_corr2 = split(pos_corr, 1: nrow(pos_corr))
 
     SHADE.dat = matrix(na.omit(unlist(lapply(pos_corr2, shade.dat))),
                         byrow = TRUE, ncol = 4)
 
-    segments(SHADE.dat[,1], SHADE.dat[,2], SHADE.dat[,3],
-             SHADE.dat[,4], col = shade.col, lwd = shade.lwd)
+    segments(SHADE.dat[, 1], SHADE.dat[, 2], SHADE.dat[, 3],
+             SHADE.dat[, 4], col = shade.col, lwd = shade.lwd)
   }
 
   ## square
@@ -787,10 +795,6 @@ corrplot = function(corr,
     pos.uppNew  = getPos.Dat(uppCI.mat)[[1]]
     uppNew      = getPos.Dat(uppCI.mat)[[2]]
 
-    if (!method %in% c('circle', 'square')) {
-       stop('Method shoud be circle or square if drawing confidence intervals.')
-    }
-
     k1 = (abs(uppNew) > abs(lowNew))
     bigabs = uppNew
     bigabs[which(!k1)] = lowNew[!k1]
@@ -803,14 +807,14 @@ corrplot = function(corr,
 
     if (plotCI == 'circle') {
 
-      symbols(pos.uppNew[,1], pos.uppNew[,2],
+      symbols(pos.uppNew[, 1], pos.uppNew[, 2],
         add = TRUE,  inches = FALSE,
         circles = 0.95 * abs(bigabs) ^ 0.5 / 2,
         bg = ifelse(sig > 0, col.fill, color_bigabs),
         fg = ifelse(sig > 0, col.fill, color_bigabs)
       )
 
-      symbols(pos.lowNew[,1], pos.lowNew[,2],
+      symbols(pos.lowNew[, 1], pos.lowNew[, 2],
         add = TRUE, inches = FALSE,
         circles = 0.95 * abs(smallabs) ^ 0.5 / 2,
         bg = ifelse(sig > 0, bg, color_smallabs),
@@ -818,13 +822,13 @@ corrplot = function(corr,
     }
 
     if (plotCI == 'square') {
-      symbols(pos.uppNew[,1], pos.uppNew[,2],
+      symbols(pos.uppNew[, 1], pos.uppNew[, 2],
         add = TRUE,  inches = FALSE,
         squares = abs(bigabs) ^ 0.5,
         bg = ifelse(sig > 0, col.fill, color_bigabs),
         fg = ifelse(sig > 0, col.fill, color_bigabs))
 
-      symbols(pos.lowNew[,1], pos.lowNew[,2],
+      symbols(pos.lowNew[, 1], pos.lowNew[, 2],
         add = TRUE, inches = FALSE,
         squares = abs(smallabs) ^ 0.5,
         bg = ifelse(sig > 0, bg, color_smallabs),
@@ -833,27 +837,27 @@ corrplot = function(corr,
 
     if (plotCI == 'rect') {
       rect.width = 0.25
-      rect(pos.uppNew[,1] - rect.width, pos.uppNew[,2] + smallabs / 2,
-           pos.uppNew[,1] + rect.width, pos.uppNew[,2] + bigabs / 2,
+      rect(pos.uppNew[, 1] - rect.width, pos.uppNew[, 2] + smallabs / 2,
+           pos.uppNew[, 1] + rect.width, pos.uppNew[, 2] + bigabs / 2,
            col = col.fill, border = col.fill)
-      segments(pos.lowNew[,1] - rect.width, pos.lowNew[,2] + DAT / 2,
-               pos.lowNew[,1] + rect.width, pos.lowNew[,2] + DAT / 2,
+      segments(pos.lowNew[, 1] - rect.width, pos.lowNew[, 2] + DAT / 2,
+               pos.lowNew[, 1] + rect.width, pos.lowNew[, 2] + DAT / 2,
                col = 'black', lwd = 1)
-      segments(pos.uppNew[,1] - rect.width, pos.uppNew[,2] + uppNew / 2,
-               pos.uppNew[,1] + rect.width, pos.uppNew[,2] + uppNew / 2,
+      segments(pos.uppNew[, 1] - rect.width, pos.uppNew[, 2] + uppNew / 2,
+               pos.uppNew[, 1] + rect.width, pos.uppNew[, 2] + uppNew / 2,
                col = 'black', lwd = 1)
-      segments(pos.lowNew[,1] - rect.width, pos.lowNew[,2] + lowNew / 2,
-               pos.lowNew[,1] + rect.width, pos.lowNew[,2] + lowNew / 2,
+      segments(pos.lowNew[, 1] - rect.width, pos.lowNew[, 2] + lowNew / 2,
+               pos.lowNew[, 1] + rect.width, pos.lowNew[, 2] + lowNew / 2,
                col = 'black', lwd = 1)
-      segments(pos.lowNew[,1] - 0.5,pos.lowNew[,2],
-               pos.lowNew[,1] + 0.5, pos.lowNew[,2], col = 'grey70', lty = 3)
+      segments(pos.lowNew[, 1] - 0.5, pos.lowNew[, 2],
+               pos.lowNew[, 1] + 0.5, pos.lowNew[, 2], col = 'grey70', lty = 3)
     }
   }
 
 
   ## add numbers
   if (!is.null(addCoef.col) && method != 'number') {
-    text(Pos[,1], Pos[,2],  col = addCoef.col,
+    text(Pos[, 1], Pos[, 2],  col = addCoef.col,
          labels = round((DAT - int) * ifelse(addCoefasPercent, 100, 1) / zoom,
                         number.digits),
          cex = number.cex, font = number.font)
@@ -883,7 +887,7 @@ corrplot = function(corr,
         pch = '*'
 
       place_points = function(sig.locs, point) {
-        text(pos.pNew[,1][sig.locs], pos.pNew[,2][sig.locs],
+        text(pos.pNew[, 1][sig.locs], pos.pNew[, 2][sig.locs],
              labels = point, col = pch.col, cex = pch.cex, lwd = 2)
       }
 
@@ -916,18 +920,18 @@ corrplot = function(corr,
       p_inSig = length(ind.p) > 0
 
       if (insig == 'pch' && p_inSig) {
-        points(pos.pNew[,1][ind.p], pos.pNew[,2][ind.p],
+        points(pos.pNew[, 1][ind.p], pos.pNew[, 2][ind.p],
                pch = pch, col = pch.col, cex = pch.cex, lwd = 2)
       }
 
       if (insig == 'p-value' && p_inSig) {
-        text(pos.pNew[,1][ind.p], pos.pNew[,2][ind.p],
+        text(pos.pNew[, 1][ind.p], pos.pNew[, 2][ind.p],
              round(pNew[ind.p], number.digits), col = pch.col)
       }
 
       if (insig == 'blank' && p_inSig) {
-        symbols(pos.pNew[,1][ind.p], pos.pNew[,2][ind.p], inches = FALSE,
-                squares = rep(1, length(pos.pNew[,1][ind.p])),
+        symbols(pos.pNew[, 1][ind.p], pos.pNew[, 2][ind.p], inches = FALSE,
+                squares = rep(1, length(pos.pNew[, 1][ind.p])),
                 fg = addgrid.col, bg = bg, add = TRUE)
       }
     }
@@ -988,20 +992,24 @@ corrplot = function(corr,
 
     if (tl.pos == 'd') {
       pos.ylabel = cbind(m1:(m1 + nn) - 0.5, n2:n1)
-      pos.ylabel = pos.ylabel[1:min(n, m),]
+      pos.ylabel = pos.ylabel[1:min(n, m), ]
 
-      symbols(pos.ylabel[,1] + 0.5, pos.ylabel[,2], add = TRUE,
+      symbols(pos.ylabel[, 1] + 0.5, pos.ylabel[, 2], add = TRUE,
               bg = bg, fg = addgrid.col,
-              inches = FALSE, squares = rep(1, length(pos.ylabel[,1])))
+              inches = FALSE, squares = rep(1, length(pos.ylabel[, 1])))
 
-      text(pos.ylabel[,1] + 0.5, pos.ylabel[,2], newcolnames[1:min(n, m)],
+      text(pos.ylabel[, 1] + 0.5, pos.ylabel[, 2], newcolnames[1:min(n, m)],
            col = tl.col, cex = tl.cex, ...)
 
     } else {
-      text(pos.xlabel[,1], pos.xlabel[,2], newcolnames, srt = tl.srt,
-           adj = ifelse(tl.srt == 0, c(0.5,0), c(0,0)),
-           col = tl.col, cex = tl.cex, offset = tl.offset, ...)
-      text(pos.ylabel[,1], pos.ylabel[,2], newrownames,
+
+      if(tl.pos != 'l') {
+        text(pos.xlabel[, 1], pos.xlabel[, 2], newcolnames, srt = tl.srt,
+             adj = ifelse(tl.srt == 0, c(0.5, 0), c(0, 0)),
+             col = tl.col, cex = tl.cex, offset = tl.offset, ...)
+      }
+
+      text(pos.ylabel[, 1], pos.ylabel[, 2], newrownames,
            col = tl.col, cex = tl.cex, pos = 2, offset = tl.offset, ...)
     }
   }
@@ -1027,11 +1035,11 @@ corrplot = function(corr,
     corrPos = cbind(corrPos, pNew)
     colnames(corrPos)[6] = c('p.value')
   }
-  corrPos = corrPos[order(corrPos[,3],-corrPos[,4]),]
+  corrPos = corrPos[order(corrPos[, 3], -corrPos[, 4]), ]
   rownames(corrPos) = NULL
 
 
-  res = list(corr = corr, corrPos = corrPos, arg = list(type = type ))
+  res = list(corr = corr, corrPos = corrPos, arg = list(type = type))
 
   invisible(res) # reordered correlation matrix, and Position
 }

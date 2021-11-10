@@ -8,12 +8,12 @@ corrplot(
   corr,
   method = c("circle", "square", "ellipse", "number", "shade", "color", "pie"),
   type = c("full", "lower", "upper"),
-  add = FALSE,
   col = NULL,
   col.lim = NULL,
   bg = "white",
   title = "",
   is.corr = TRUE,
+  add = FALSE,
   diag = TRUE,
   outline = FALSE,
   mar = c(0, 0, 0, 0),
@@ -78,12 +78,13 @@ corrplot(
 \code{'lower'}, display full matrix, lower triangular or upper triangular
 matrix.}
 
-\item{add}{Logical, if \code{TRUE}, the graph is added to an existing plot,
-otherwise a new plot is created.}
-
 \item{col}{Vector, the color of glyphs. It is distributed uniformly in
-\code{col.lim} interval. If NULL, \code{col} will be
-\code{colorRampPalette(col2)(200)}, see example about col2.}
+\code{col.lim} interval.
+If \code{is.corr} is \code{TRUE}, \code{col} will be \code{COL2('RdBu', 200)}.
+If \code{is.corr} is \code{FALSE} and all values of the matrix are positive or negative,
+\code{col} will be \code{COL2('RdBu', 200)}.
+If \code{is.corr} is \code{FALSE} and the values of the matrix are partly
+positive and partly negative, \code{col} will be \code{COL1('YlOrBr', 200)}.}
 
 \item{col.lim}{The limits \code{(x1, x2)} interval for assigning color by
   \code{col}. If \code{NULL},
@@ -102,6 +103,9 @@ otherwise a new plot is created.}
 \item{is.corr}{Logical, whether the input matrix is a correlation matrix or
 not. We can visualize the non-correlation matrix by setting
 \code{is.corr = FALSE}.}
+
+\item{add}{Logical, if \code{TRUE}, the graph is added to an existing plot,
+otherwise a new plot will be created.}
 
 \item{diag}{Logical, whether display the correlation coefficients on the
 principal diagonal.}
@@ -155,6 +159,7 @@ must be one of \code{'lt'}, \code{'ld'}, \code{'td'}, \code{'d'} or
 \code{'n'}. \code{'lt'}(default if \code{type=='full'}) means left and top,
 \code{'ld'}(default if \code{type=='lower'}) means left and diagonal,
 \code{'td'}(default if \code{type=='upper'}) means top and diagonal(near),
+\code{'l'} means left,
 \code{'d'} means diagonal, \code{'n'} means don't add text-label.}
 
 \item{tl.cex}{Numeric, for the size of text label (variable names).}
@@ -297,16 +302,10 @@ M = cor(mtcars)
 set.seed(0)
 
 ##  different color series
-col0 = colorRampPalette(c('white', 'cyan', '#007FFF', 'blue','#00007F'))
-col1 = colorRampPalette(c('#7F0000', 'red', '#FF7F00', 'yellow', 'white',
-                           'cyan', '#007FFF', 'blue','#00007F'))
-col2 = colorRampPalette(c('#67001F', '#B2182B', '#D6604D', '#F4A582',
-                           '#FDDBC7', '#FFFFFF', '#D1E5F0', '#92C5DE',
-                           '#4393C3', '#2166AC', '#053061'))
-col3 = colorRampPalette(c('red', 'white', 'blue'))
-col4 = colorRampPalette(c('#7F0000', 'red', '#FF7F00', 'yellow', '#7FFF7F',
-                           'cyan', '#007FFF', 'blue', '#00007F'))
-
+## COL2: Get diverging colors
+## c('RdBu', 'BrBG', 'PiYG', 'PRGn', 'PuOr', 'RdYlBu')
+## COL1: Get sequential colors
+## c('Oranges', 'Purples', 'Reds', 'Blues', 'Greens', 'Greys', 'OrRd', 'YlOrRd', 'YlOrBr', 'YlGn')
 
 wb = c('white', 'black')
 
@@ -319,23 +318,23 @@ corrplot(M)
 corrplot(M, order = 'AOE')
 corrplot(M, order = 'AOE', addCoef.col = 'grey')
 
-corrplot(M, order = 'AOE', col = col1(20), cl.length = 21, addCoef.col = 'grey')
-corrplot(M, order = 'AOE', col = col1(10), addCoef.col = 'grey')
+corrplot(M, order = 'AOE',  cl.length = 21, addCoef.col = 'grey')
+corrplot(M, order = 'AOE', col = COL2(n=10), addCoef.col = 'grey')
 
-corrplot(M, order = 'AOE', col = col2(200))
-corrplot(M, order = 'AOE', col = col2(200), addCoef.col = 'grey')
-corrplot(M, order = 'AOE', col = col2(20), cl.length = 21, addCoef.col = 'grey')
-corrplot(M, order = 'AOE', col = col2(10), addCoef.col = 'grey')
+corrplot(M, order = 'AOE', col = COL2('PiYG'))
+corrplot(M, order = 'AOE', col = COL2('PRGn'), addCoef.col = 'grey')
+corrplot(M, order = 'AOE', col = COL2('PuOr', 20), cl.length = 21, addCoef.col = 'grey')
+corrplot(M, order = 'AOE', col = COL2('PuOr', 10), addCoef.col = 'grey')
 
-corrplot(M, order = 'AOE', col = col3(100))
-corrplot(M, order = 'AOE', col = col3(10))
+corrplot(M, order = 'AOE', col = COL2('RdYlBu', 100))
+corrplot(M, order = 'AOE', col = COL2('RdYlBu', 10))
 
 
-corrplot(M, method = 'color', col = col1(20), cl.length = 21, order = 'AOE',
+corrplot(M, method = 'color', col = COL2(n=20), cl.length = 21, order = 'AOE',
          addCoef.col = 'grey')
-corrplot(M, method = 'square', col = col2(200), order = 'AOE')
-corrplot(M, method = 'ellipse', col = col1(200), order = 'AOE')
-corrplot(M, method = 'shade', col = col3(20), order = 'AOE')
+corrplot(M, method = 'square', col = COL2(n=200), order = 'AOE')
+corrplot(M, method = 'ellipse', col = COL2(n=200), order = 'AOE')
+corrplot(M, method = 'shade', col = COL2(n=20), order = 'AOE')
 corrplot(M, method = 'pie', order = 'AOE')
 
 ## col = wb
@@ -352,7 +351,7 @@ corrplot(M, add = TRUE, type = 'lower', method = 'ellipse', order = 'AOE',
          diag = FALSE, tl.pos = 'n', cl.pos = 'n')
 
 ## circle + square
-corrplot(M, order = 'AOE',type = 'upper', tl.pos = 'd')
+corrplot(M, order = 'AOE', type = 'upper', tl.pos = 'd')
 corrplot(M, add = TRUE, type = 'lower', method = 'square', order = 'AOE',
          diag = FALSE, tl.pos = 'n', cl.pos = 'n')
 
@@ -375,40 +374,40 @@ corrplot(M, order = 'hclust', addrect = 4, rect.col = 'blue')
 corrplot(M, order = 'hclust', hclust.method = 'ward.D2', addrect = 4)
 
 ## visualize a  matrix in [0, 1]
-corrplot(abs(M), order = 'AOE', col.lim = c(0,1))
-corrplot(abs(M), order = 'AOE', col = col1(20), col.lim = c(0,1))
+corrplot(abs(M), order = 'AOE', col.lim = c(0, 1))
+corrplot(abs(M), order = 'AOE', is.corr = FALSE,  col.lim = c(0, 1))
 
 
 # when is.corr=TRUE, col.lim only affect the color legend
 # If you change it, the color is still assigned on [-1, 1]
 corrplot(M/2)
-corrplot(M/2, col.lim=c(-0.5,0.5))
+corrplot(M/2, col.lim = c(-0.5, 0.5))
 
 # when is.corr=FALSE, col.lim is also used to assign colors
 # if the matrix have both positive and negative values
 # the matrix transformation keep every values positive and negative
-corrplot(M*2, is.corr = FALSE, col.lim=c(-2, 2))
-corrplot(M*2, is.corr = FALSE, col.lim=c(-2, 2) * 2)
-corrplot(M*2, is.corr = FALSE, col.lim=c(-2, 2) * 4)
+corrplot(M*2, is.corr = FALSE, col.lim = c(-2, 2))
+corrplot(M*2, is.corr = FALSE, col.lim = c(-2, 2) * 2)
+corrplot(M*2, is.corr = FALSE, col.lim = c(-2, 2) * 4)
 
 ## 0.5~0.6
-corrplot(abs(M)/10+0.5, col=col0(10))
-corrplot(abs(M)/10+0.5, is.corr = FALSE, col.lim=c(0.5,0.6), col=col0(10))
+corrplot(abs(M)/10+0.5, col = COL1('Greens', 10))
+corrplot(abs(M)/10+0.5, is.corr = FALSE, col.lim = c(0.5, 0.6), col = COL1('YlGn', 10))
 
 
 ## visualize a  matrix in [-100, 100]
-ran = round(matrix(runif(225, -100,100), 15))
+ran = round(matrix(runif(225, -100, 100), 15))
 corrplot(ran, is.corr = FALSE)
 corrplot(ran, is.corr = FALSE, col.lim = c(-100, 100))
 
-## visualize a  matrix in [100, 300]
+## visualize a matrix in [100, 300]
 ran2 = ran + 200
 
-# bad color
-corrplot(ran2, is.corr = FALSE, col.lim = c(100, 300), col=col1(100))
+# bad color, not suitable for a matrix in [100, 300]
+corrplot(ran2, is.corr = FALSE, col.lim = c(100, 300), col = COL2(, 100))
 
 # good color
-corrplot(ran2, is.corr = FALSE, col.lim = c(100, 300), col=col0(100))
+corrplot(ran2, is.corr = FALSE, col.lim = c(100, 300), col = COL1(, 100))
 
 
 ## text-labels and plot type
@@ -441,8 +440,8 @@ corrplot(M2, na.label = 'NA')
 
 
 ##the input matrix is not square
-corrplot(M[1:8,])
-corrplot(M[,1:8])
+corrplot(M[1:8, ])
+corrplot(M[, 1:8])
 
 testRes = cor.mtest(mtcars, conf.level = 0.95)
 
@@ -450,8 +449,8 @@ testRes = cor.mtest(mtcars, conf.level = 0.95)
 corrplot(M, p.mat = testRes$p, sig.level = 0.05, order = 'hclust', addrect = 2)
 
 ## leave blank on no significant coefficient
-corrplot(M, p.mat = testRes$p, method = 'circle', type = 'lower', insig='blank',
-         addCoef.col ='black', number.cex = 0.8, order = 'AOE', diag=FALSE)
+corrplot(M, p.mat = testRes$p, method = 'circle', type = 'lower', insig ='blank',
+         addCoef.col ='black', number.cex = 0.8, order = 'AOE', diag = FALSE)
 
 ## add p-values on no significant coefficients
 corrplot(M, p.mat = testRes$p, insig = 'p-value')
@@ -466,7 +465,8 @@ corrplot(M, p.mat = testRes$p, method = 'color', diag = FALSE, type = 'upper',
 
 ## add significant level stars and cluster rectangles
 corrplot(M, p.mat = testRes$p, tl.pos = 'd', order = 'hclust', addrect = 2,
-         insig = 'label_sig', sig.level = c(0.001, 0.01, 0.05), pch.cex = 0.9, pch.col = 'grey20')
+         insig = 'label_sig', sig.level = c(0.001, 0.01, 0.05),
+         pch.cex = 0.9, pch.col = 'grey20')
 
 # Visualize confidence interval
 corrplot(M, lowCI = testRes$lowCI, uppCI = testRes$uppCI, order = 'hclust',
@@ -499,12 +499,12 @@ corrplot(M, low = res1$lowCI, upp = res1$uppCI,
          col = c('white', 'black'), bg = 'gold2', order = 'AOE',
          plotCI = 'square', addg = NULL, cl.pos = 'n')
 corrplot(M, p.mat = res1$p, low = res1$lowCI, upp = res1$uppCI,
-         col = c('white','black'), bg = 'gold2', order = 'AOE', pch.col = 'red',
+         col = c('white', 'black'), bg = 'gold2', order = 'AOE', pch.col = 'red',
          plotCI = 'square', addg = NULL, cl.pos = 'n')
 
 ## plot confidence interval0.95, 0.95, 0.99, 'rect' method
 corrplot(M, low = res1$lowCI, upp = res1$uppCI, order = 'hclust',
-         rect.col = 'navy', plotCI = 'rect',cl.pos = 'n')
+         rect.col = 'navy', plotCI = 'rect', cl.pos = 'n')
 corrplot(M, p.mat = res1$p, low = res1$lowCI, upp = res1$uppCI,
          order = 'hclust', pch.col = 'red', sig.level = 0.05, addrect = 3,
          rect.col = 'navy', plotCI = 'rect', cl.pos = 'n')

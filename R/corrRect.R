@@ -31,9 +31,11 @@
 #' @author Taiyun Wei
 #' @export
 corrRect = function(corrRes = NULL, index = NULL, name = NULL, namesMat = NULL,
-                    col = 'black', lwd = 2, ...) {
+                    col = 'black', lwd = 2, ...)
+{
 
-  if((!is.null(index) + !is.null(name) + !is.null(namesMat)) > 1) {
+  if((as.integer(!is.null(index)) + as.integer(!is.null(name)) +
+      as.integer(!is.null(namesMat))) > 1) {
     stop('You should just input one of index, name and namesMat!')
   }
 
@@ -51,12 +53,9 @@ corrRect = function(corrRes = NULL, index = NULL, name = NULL, namesMat = NULL,
   if(!is.null(name)) {
 
     if(any(cName != rName)) {
-      stop('colnames and rownames should NOT be NULL!')
-    }
-
-    if(is.null(cName) | is.null(rName)) {
       stop('colnames and rownames must be same when index or name is inputted!')
     }
+
 
     if(!all(name %in% cName)) {
       stop('Non-existent name found!')
@@ -69,7 +68,7 @@ corrRect = function(corrRes = NULL, index = NULL, name = NULL, namesMat = NULL,
 
   if(!is.null(index)) {
 
-    if(!is.null(cName) & !is.null(rName) & any(cName != rName)) {
+    if(any(cName != rName)) {
       stop('colnames and rownames must be same when index or name is inputted!')
     }
 
@@ -83,37 +82,37 @@ corrRect = function(corrRes = NULL, index = NULL, name = NULL, namesMat = NULL,
     y2 = nrow(corr) - index[-1] + 0.5
     St = S = cbind(c(x1, x1, x2, x2), c(y1, y1, y2, y2),
                    c(x2, x1, x2, x1), c(y1, y2, y1, y2))
-    St[,2] = abs(St[,2] - nrow(corr) - 1)
-    St[,4] = abs(St[,4] - nrow(corr) - 1)
+    St[, 2] = abs(St[, 2] - nrow(corr) - 1)
+    St[, 4] = abs(St[, 4] - nrow(corr) - 1)
 
     if(type=='upper') {
-      i = which((St[,1] - St[,2]) > -0.1 & (St[,3] - St[,4]) > -0.1)
-      S = S[i,]
+      i = which((St[, 1] - St[, 2]) > -0.1 & (St[, 3] - St[, 4]) > -0.1)
+      S = S[i, ]
     }
 
     if(type=='lower') {
-      i = which((St[,2] - St[,1]) > -0.1 & (St[,4] - St[,3]) > -0.1)
-      S = S[i,]
+      i = which((St[, 2] - St[, 1]) > -0.1 & (St[, 4] - St[, 3]) > -0.1)
+      S = S[i, ]
     }
 
-    segments(S[,1], S[,2], S[,3], S[,4], col=col, lwd = lwd, ...)
+    segments(S[, 1], S[, 2], S[, 3], S[, 4], col = col, lwd = lwd, ...)
   }
 
   if(!is.null(namesMat)) {
 
     if(is.vector(namesMat)) {
-      namesMat = matrix(namesMat, ncol=4)
+      namesMat = matrix(namesMat, ncol = 4, nrow = 1)
     }
 
-    xy1 = getCharXY(namesMat[,1:2, drop=FALSE], corrPos)
-    xy2 = getCharXY(namesMat[,3:4, drop=FALSE], corrPos)
+    xy1 = getCharXY(namesMat[, 1:2, drop=FALSE], corrPos)
+    xy2 = getCharXY(namesMat[, 3:4, drop=FALSE], corrPos)
 
     xy = cbind(xy1, xy2)
 
-    x1 = apply(xy[,c(1,3), drop=FALSE], 1, min) - 0.5
-    y1 = apply(xy[,c(2,4), drop=FALSE], 1, min) - 0.5
-    x2 = apply(xy[,c(1,3), drop=FALSE], 1, max) + 0.5
-    y2 = apply(xy[,c(2,4), drop=FALSE], 1, max) + 0.5
+    x1 = apply(xy[, c(1, 3), drop=FALSE], 1, min) - 0.5
+    y1 = apply(xy[, c(2, 4), drop=FALSE], 1, min) - 0.5
+    x2 = apply(xy[, c(1, 3), drop=FALSE], 1, max) + 0.5
+    y2 = apply(xy[, c(2, 4), drop=FALSE], 1, max) + 0.5
 
     rect(x1, y1, x2, y2, border = col, lwd = lwd, ...)
   }
@@ -125,17 +124,13 @@ corrRect = function(corrRes = NULL, index = NULL, name = NULL, namesMat = NULL,
 
 #' @note pure function
 #' @noRd
-getCharXY = function(x, dat){
+getCharXY = function(x, dat) {
 
-  if(is.vector((x))) {
-    x = matrix(x, nrow = 1)
-  }
-
-  res = apply(x, 1, function(n, d=dat) d[d[,1]==n[1]&d[,2]==n[2], 3:4])
+  res = apply(x, 1, function(n, d=dat) d[d[, 1]==n[1]&d[, 2]==n[2], 3:4])
 
   f = which(unlist(lapply(res, nrow))==0)
   if(length(f) > 0) {
-    error  = paste(toString(unique(x[f,])), 'paired X-Y names were not found!')
+    error  = paste(toString(unique(x[f, ])), 'paired X-Y names were not found!')
     stop(error)
   }
 

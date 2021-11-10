@@ -2,13 +2,13 @@
 knitr::opts_chunk$set(
   fig.align = 'center',
   fig.path = 'webimg/',
-  fig.width = 6,
-  fig.height = 6,
+  fig.width = 7,
+  fig.height = 7,
   dev = 'png')
 
-get_os = function(){
+get_os = function() {
   sysinf = Sys.info()
-  if (!is.null(sysinf)){
+  if (!is.null(sysinf)) {
     os = sysinf['sysname']
     if (os == 'Darwin')
       os = 'osx'
@@ -21,7 +21,7 @@ get_os = function(){
   }
   tolower(os)
 }
-if(get_os() =='windows' & capabilities('cairo') | all(capabilities(c('cairo', 'X11')))){
+if(get_os() =='windows' & capabilities('cairo') | all(capabilities(c('cairo', 'X11')))) {
   knitr::opts_chunk$set(dev.args = list(type='cairo'))
 }
 
@@ -29,10 +29,10 @@ if(get_os() =='windows' & capabilities('cairo') | all(capabilities(c('cairo', 'X
 library(corrplot)
 M = cor(mtcars)
 corrplot(M, method = 'number') # colorful number
-corrplot(M, method = 'color', order = 'alphabet') 
+corrplot(M, method = 'color', order = 'alphabet')
 corrplot(M) # by default, method = 'circle'
 corrplot(M, order = 'AOE') # after 'AOE' reorder
-corrplot(M, method = 'shade', order = 'AOE', diag = FALSE) 
+corrplot(M, method = 'shade', order = 'AOE', diag = FALSE)
 corrplot(M, method = 'square', order = 'FPC', type = 'lower', diag = FALSE)
 corrplot(M, method = 'ellipse', order = 'AOE', type = 'upper')
 corrplot.mixed(M, order = 'AOE')
@@ -40,7 +40,7 @@ corrplot.mixed(M, lower = 'shade', upper = 'pie', order = 'hclust')
 
 ## ----hclust-------------------------------------------------------------------
 corrplot(M, order = 'hclust', addrect = 2)
-corrplot(M, method = 'square', diag = FALSE, order = 'hclust', 
+corrplot(M, method = 'square', diag = FALSE, order = 'hclust',
          addrect = 3, rect.col = 'blue', rect.lwd = 3, tl.pos = 'd')
 
 ## ----seriation----------------------------------------------------------------
@@ -49,7 +49,7 @@ list_seriation_methods('matrix')
 list_seriation_methods('dist')
 
 data(Zoo)
-Z = cor(Zoo[,-c(15, 17)])
+Z = cor(Zoo[, -c(15, 17)])
 
 dist2Order = function(corr, method, ...) {
   d_corr = as.dist(1 - corr)
@@ -67,16 +67,32 @@ corrplot(Z[i, i], cl.pos = 'n')
 i = dist2Order(Z, 'HC')
 corrplot(Z[i, i], cl.pos = 'n')
 
-# Rank-two ellipse seriation
-i = dist2Order(Z, 'R2E')
+# Fast Optimal Leaf Ordering for Hierarchical Clustering
+i = dist2Order(Z, 'OLO')
 corrplot(Z[i, i], cl.pos = 'n')
 
-# Spectral seriation 
+# Quadratic Assignment Problem
+i = dist2Order(Z, 'QAP_2SUM')
+corrplot(Z[i, i], cl.pos = 'n')
+
+# Multidimensional Scaling
+i = dist2Order(Z, 'MDS_nonmetric')
+corrplot(Z[i, i], cl.pos = 'n')
+
+# Simulated annealing
+i = dist2Order(Z, 'ARSA')
+corrplot(Z[i, i], cl.pos = 'n')
+
+# TSP solver
+i = dist2Order(Z, 'TSP')
+corrplot(Z[i, i], cl.pos = 'n')
+
+# Spectral seriation
 i = dist2Order(Z, 'Spectral')
 corrplot(Z[i, i], cl.pos = 'n')
 
-# TSP solver 
-i = dist2Order(Z, 'TSP')
+# Rank-two ellipse seriation
+i = dist2Order(Z, 'R2E')
 corrplot(Z[i, i], cl.pos = 'n')
 
 ## ----rectangles---------------------------------------------------------------
@@ -87,9 +103,9 @@ i = get_order(seriate(Z, 'PCA_angle'))
 corrplot(Z[i, i], cl.pos = 'n') %>% corrRect(c(1, 9, 15))
 
 # use name parameter
-# Since R 4.1.0, the following one line code works: 
+# Since R 4.1.0, the following one line code works:
 # corrplot(M, order = 'AOE') |> corrRect(name = c('gear', 'wt', 'carb'))
-corrplot(Z, order = 'AOE') %>% 
+corrplot(Z, order = 'AOE') %>%
   corrRect(name = c('tail', 'airborne', 'venomous', 'predator'))
 
 
@@ -99,35 +115,33 @@ r = rbind(c('eggs', 'catsize', 'airborne', 'milk'),
 corrplot(Z, order = 'hclust') %>% corrRect(namesMat = r)
 
 ## ----color--------------------------------------------------------------------
-## diverging color example, suitable for matrix in [-N, N]
-col1 = colorRampPalette(c('#7F0000', 'red', '#FF7F00', 'yellow', 'white',
-                           'cyan', '#007FFF', 'blue', '#00007F'))
-col2 = colorRampPalette(c('red', 'white', 'blue'))	
+corrplot(M, order = 'AOE', col = COL2('RdBu', 10))
+         
+corrplot(M, order = 'AOE', addCoef.col = 'black', tl.pos = 'd',
+         cl.pos = 'n', col = COL2('PiYG'))
 
-library(RColorBrewer)
-# use RcolorBrewer color
-corrplot(M, order = 'AOE', addCoef.col = 'black', tl.pos = 'd',  
-         cl.pos = 'n', col = brewer.pal(n = 10, name = 'PRGn'))
+corrplot(M, method = 'square', order = 'AOE', addCoef.col = 'black', tl.pos = 'd',
+         cl.pos = 'n', col = COL2('BrBG'))
 
 ## bottom color legend, diagonal text legend, rotate text label
-corrplot(M, order = 'AOE', cl.pos = 'b', tl.pos = 'd', 
-         col = col1(10), diag = FALSE)
+corrplot(M, order = 'AOE', cl.pos = 'b', tl.pos = 'd',
+         col = COL2('PRGn'), diag = FALSE)
 
 ## text labels rotated 45 degrees and  wider color legend with numbers right aligned
-corrplot(M, type = 'lower', order = 'hclust', tl.col = 'black', 
-         cl.ratio = 0.2, tl.srt = 45, col = col2(10))
+corrplot(M, type = 'lower', order = 'hclust', tl.col = 'black',
+         cl.ratio = 0.2, tl.srt = 45, col = COL2('PuOr', 10))
 
 ## remove color legend, text legend and principal diagonal glyph
-corrplot(M, order = 'AOE', cl.pos = 'n', tl.pos = 'n', 
-         col = c('white', 'black'), bg = 'gold2')  
+corrplot(M, order = 'AOE', cl.pos = 'n', tl.pos = 'n',
+         col = c('white', 'black'), bg = 'gold2')
 
 ## ----non-corr-----------------------------------------------------------------
-## color example, suitable for matrix in [-N, 0] or [0, N]
-col3 = hcl.colors(10, "YlOrRd", rev = TRUE)
-
+## matrix in [-20, 30]
 N = matrix(runif(80, 20, 30), 8)
-corrplot(N, is.corr = FALSE, col.lim = c(20, 30), 
-         col = col3, cl.pos = 'b', win.asp = 0.8)
+corrplot(N, is.corr = FALSE, col.lim = c(20, 30), cl.pos = 'b', win.asp = 0.8)
+
+## matrix in [-5, 15]
+corrplot(10*(M + 0.5), is.corr = FALSE, cl.pos = 'b', tl.pos = 'l')
 
 ## ----col-lim------------------------------------------------------------------
 # when is.corr=TRUE, col.lim only affect the color legend display
@@ -137,22 +151,31 @@ corrplot(M/2, col.lim=c(-0.5, 0.5))
 ## ----NA-math------------------------------------------------------------------
 M2 = M
 diag(M2) = NA
-colnames(M2) = rep(c('$alpha+beta', '$alpha[0]', '$alpha[beta]'), 
+colnames(M2) = rep(c('$alpha+beta', '$alpha[0]', '$alpha[beta]'),
                    c(4, 4, 3))
-rownames(M2) = rep(c('$Sigma[i]^n', '$sigma',  '$alpha[0]^100', '$alpha[beta]'), 
+rownames(M2) = rep(c('$Sigma[i]^n', '$sigma',  '$alpha[0]^100', '$alpha[beta]'),
                    c(2, 4, 2, 3))
-corrplot(10*abs(M2), col = col3, is.corr = FALSE, 
-         col.lim = c(0, 10), tl.cex = 1.5)
+corrplot(10*abs(M2), is.corr = FALSE, col.lim = c(0, 10), tl.cex = 1.5)
 
 ## ----test---------------------------------------------------------------------
 testRes = cor.mtest(mtcars, conf.level = 0.95)
 
 ## specialized the insignificant value according to the significant level
-corrplot(M, p.mat = testRes$p, sig.level = 0.10, order = 'hclust', addrect = 2) 
+corrplot(M, p.mat = testRes$p, sig.level = 0.10, order = 'hclust', addrect = 2)
 
-## leave blank on no significant coefficient
+
+## leave blank on non-significant coefficient
+## add significant correlation coefficients
 corrplot(M, p.mat = testRes$p, method = 'circle', type = 'lower', insig='blank',
          addCoef.col ='black', number.cex = 0.8, order = 'AOE', diag=FALSE)
+
+
+## leave blank on non-significant coefficient
+## add all correlation coefficients
+corrplot(M, p.mat = testRes$p, method = 'circle', type = 'lower', insig='blank',
+         order = 'AOE', diag=FALSE)$corrPos -> p1
+text(p1$x, p1$y, round(p1$corr,2), cex=0.8)
+
 
 ## add p-values on no significant coefficients
 corrplot(M, p.mat = testRes$p, insig = 'p-value')
@@ -162,12 +185,12 @@ corrplot(M, p.mat = testRes$p, insig = 'p-value', sig.level = -1)
 
 ## add significant level stars
 corrplot(M, p.mat = testRes$p, method = 'color', diag = FALSE, type = 'upper',
-         sig.level = c(0.001, 0.01, 0.05), pch.cex = 0.9, 
+         sig.level = c(0.001, 0.01, 0.05), pch.cex = 0.9,
          insig = 'label_sig', pch.col = 'grey20', order = 'AOE')
 
 ## add significant level stars and cluster rectangles
 corrplot(M, p.mat = testRes$p, tl.pos = 'd', order = 'hclust', addrect = 2,
-         insig = 'label_sig', sig.level = c(0.001, 0.01, 0.05), 
+         insig = 'label_sig', sig.level = c(0.001, 0.01, 0.05),
          pch.cex = 0.9, pch.col = 'grey20')
 
 ## ----confidence-interval------------------------------------------------------
