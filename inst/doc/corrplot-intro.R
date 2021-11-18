@@ -1,9 +1,11 @@
 ## ----setup, include=FALSE-----------------------------------------------------
+
 knitr::opts_chunk$set(
   fig.align = 'center',
   fig.path = 'webimg/',
   fig.width = 7,
   fig.height = 7,
+  out.width = '600px',
   dev = 'png')
 
 get_os = function() {
@@ -24,6 +26,7 @@ get_os = function() {
 if(get_os() =='windows' & capabilities('cairo') | all(capabilities(c('cairo', 'X11')))) {
   knitr::opts_chunk$set(dev.args = list(type='cairo'))
 }
+
 
 ## ----intro--------------------------------------------------------------------
 library(corrplot)
@@ -51,55 +54,43 @@ list_seriation_methods('dist')
 data(Zoo)
 Z = cor(Zoo[, -c(15, 17)])
 
-dist2Order = function(corr, method, ...) {
+dist2order = function(corr, method, ...) {
   d_corr = as.dist(1 - corr)
   s = seriate(d_corr, method = method, ...)
   i = get_order(s)
   return(i)
 }
 
-
-# PCA_angle, same as 'AOE' in corrplot() and corrMatOrder()
-i = get_order(seriate(Z, 'PCA_angle'))
-corrplot(Z[i, i], cl.pos = 'n')
-
-# Hierarchical clustering
-i = dist2Order(Z, 'HC')
-corrplot(Z[i, i], cl.pos = 'n')
-
+## ----seriation-plot-----------------------------------------------------------
 # Fast Optimal Leaf Ordering for Hierarchical Clustering
-i = dist2Order(Z, 'OLO')
+i = dist2order(Z, 'OLO')
 corrplot(Z[i, i], cl.pos = 'n')
 
 # Quadratic Assignment Problem
-i = dist2Order(Z, 'QAP_2SUM')
+i = dist2order(Z, 'QAP_2SUM')
 corrplot(Z[i, i], cl.pos = 'n')
 
 # Multidimensional Scaling
-i = dist2Order(Z, 'MDS_nonmetric')
+i = dist2order(Z, 'MDS_nonmetric')
 corrplot(Z[i, i], cl.pos = 'n')
 
 # Simulated annealing
-i = dist2Order(Z, 'ARSA')
+i = dist2order(Z, 'ARSA')
 corrplot(Z[i, i], cl.pos = 'n')
 
 # TSP solver
-i = dist2Order(Z, 'TSP')
+i = dist2order(Z, 'TSP')
 corrplot(Z[i, i], cl.pos = 'n')
 
 # Spectral seriation
-i = dist2Order(Z, 'Spectral')
-corrplot(Z[i, i], cl.pos = 'n')
-
-# Rank-two ellipse seriation
-i = dist2Order(Z, 'R2E')
+i = dist2order(Z, 'Spectral')
 corrplot(Z[i, i], cl.pos = 'n')
 
 ## ----rectangles---------------------------------------------------------------
 library(magrittr)
 
-# use index parameter
-i = get_order(seriate(Z, 'PCA_angle'))
+# Rank-two ellipse seriation, use index parameter
+i = dist2order(Z, 'R2E')
 corrplot(Z[i, i], cl.pos = 'n') %>% corrRect(c(1, 9, 15))
 
 # use name parameter
@@ -113,6 +104,41 @@ corrplot(Z, order = 'AOE') %>%
 r = rbind(c('eggs', 'catsize', 'airborne', 'milk'),
           c('catsize', 'eggs', 'milk', 'airborne'))
 corrplot(Z, order = 'hclust') %>% corrRect(namesMat = r)
+
+## ----echo=FALSE,  fig.width = 8, fig.height = 6, out.width = '700px'----------
+## diverging colors
+plot.new()
+par(mar = c(0, 0, 0, 0) + 0.1)
+plot.window(xlim = c(-0.2, 1.1), ylim = c(0, 1), xaxs = 'i', yaxs = 'i')
+
+col = c('RdBu', 'BrBG', 'PiYG', 'PRGn', 'PuOr', 'RdYlBu')
+
+for(i in 1:length(col)) {
+  colorlegend(COL2(col[i]), -10:10/10, align = 'l', cex = 0.8, xlim = c(0, 1),
+              ylim = c(i/length(col)-0.1, i/length(col)), vertical = FALSE)
+  text(-0.01, i/length(col)-0.02, col[i], adj = 0.5, pos = 2, cex = 0.8)
+}
+
+## ----echo=FALSE,  fig.width = 8, fig.height = 6, out.width = '700px'----------
+## sequential colors
+plot.new()
+par(mar = c(0, 0, 0, 0) + 0.1)
+plot.window(xlim = c(-0.2, 1.1), ylim = c(0, 1), xaxs = 'i', yaxs = 'i')
+
+col = c('Oranges', 'Purples', 'Reds', 'Blues', 'Greens', 'Greys', 'OrRd',
+        'YlOrRd', 'YlOrBr', 'YlGn')
+
+for(i in 1:length(col)) {
+  colorlegend(COL1(col[i]), 0:10, align = 'l', cex = 0.8, xlim = c(0, 1),
+              ylim = c(i/length(col)-0.1, i/length(col)), vertical = FALSE)
+  text(-0.01, i/length(col)-0.02, col[i], adj = 0.5, pos = 2)
+}
+
+## ----eval=FALSE---------------------------------------------------------------
+#  COL1(sequential = c("Oranges", "Purples", "Reds", "Blues", "Greens",
+#                      "Greys", "OrRd", "YlOrRd", "YlOrBr", "YlGn"), n = 200)
+#  
+#  COL2(diverging = c("RdBu", "BrBG", "PiYG", "PRGn", "PuOr", "RdYlBu"), n = 200)
 
 ## ----color--------------------------------------------------------------------
 corrplot(M, order = 'AOE', col = COL2('RdBu', 10))
@@ -136,12 +162,16 @@ corrplot(M, order = 'AOE', cl.pos = 'n', tl.pos = 'n',
          col = c('white', 'black'), bg = 'gold2')
 
 ## ----non-corr-----------------------------------------------------------------
-## matrix in [-20, 30]
-N = matrix(runif(80, 20, 30), 8)
-corrplot(N, is.corr = FALSE, col.lim = c(20, 30), cl.pos = 'b', win.asp = 0.8)
+## matrix in [20, 26], grid.col
+N1 = matrix(runif(80, 20, 26), 8)
+corrplot(N1, is.corr = FALSE, col.lim = c(20, 30), method = 'color', tl.pos = 'n',
+         col = COL1('YlGn'), cl.pos = 'b', addgrid.col = 'white', addCoef.col = 'grey50')
 
-## matrix in [-5, 15]
-corrplot(10*(M + 0.5), is.corr = FALSE, cl.pos = 'b', tl.pos = 'l')
+
+## matrix in [-15, 10]
+N2 = matrix(runif(80, -15, 10), 8)
+corrplot(N2, is.corr = FALSE, method = 'color', col.lim = c(-15, 10), tl.pos = 'n',
+         col = COL2('PiYG'), cl.pos = 'b', addCoef.col = 'grey50')
 
 ## ----col-lim------------------------------------------------------------------
 # when is.corr=TRUE, col.lim only affect the color legend display
@@ -169,14 +199,14 @@ corrplot(M, p.mat = testRes$p, sig.level = 0.10, order = 'hclust', addrect = 2)
 corrplot(M, p.mat = testRes$p, method = 'circle', type = 'lower', insig='blank',
          addCoef.col ='black', number.cex = 0.8, order = 'AOE', diag=FALSE)
 
-
+## ----special------------------------------------------------------------------
 ## leave blank on non-significant coefficient
 ## add all correlation coefficients
 corrplot(M, p.mat = testRes$p, method = 'circle', type = 'lower', insig='blank',
-         order = 'AOE', diag=FALSE)$corrPos -> p1
-text(p1$x, p1$y, round(p1$corr,2), cex=0.8)
+         order = 'AOE', diag = FALSE)$corrPos -> p1
+text(p1$x, p1$y, round(p1$corr, 2))
 
-
+## ----p-values-----------------------------------------------------------------
 ## add p-values on no significant coefficients
 corrplot(M, p.mat = testRes$p, insig = 'p-value')
 

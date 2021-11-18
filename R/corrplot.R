@@ -24,22 +24,22 @@
 #'   matrix.
 #'
 #'
-#' @param col Vector, the color of glyphs. It is distributed uniformly in
+#' @param col Vector, the colors of glyphs. They are distributed uniformly in
 #'   \code{col.lim} interval.
-#'   If \code{is.corr} is \code{TRUE}, \code{col} will be \code{COL2('RdBu', 200)}.
-#'   If \code{is.corr} is \code{FALSE} and all values of the matrix are positive or negative,
-#'   \code{col} will be \code{COL2('RdBu', 200)}.
-#'   If \code{is.corr} is \code{FALSE} and the values of the matrix are partly
-#'   positive and partly negative, \code{col} will be \code{COL1('YlOrBr', 200)}.
+#'   If \code{is.corr} is \code{TRUE}, the default value will be \code{COL2('RdBu', 200)}.
+#'   If \code{is.corr} is \code{FALSE} and \code{corr} is a non-negative or non-positive matrix,
+#'   the default value will be \code{COL1('YlOrBr', 200)};
+#'   otherwise (elements are partly positive and partly negative),
+#'   the default value will be \code{COL2('RdBu', 200)}.
 #'
 #' @param col.lim The limits \code{(x1, x2)} interval for assigning color by
 #'   \code{col}. If \code{NULL},
-#'   \code{col.lim} will be \code{c(-1, 1)} when \code{is.corr} is  \code{TRUE}, .
+#'   \code{col.lim} will be \code{c(-1, 1)} when \code{is.corr} is  \code{TRUE},
 #'   \code{col.lim} will be \code{c(min(corr), max(corr))} when \code{is.corr}
 #'   is \code{FALSE}
 #'
-#'   NOTICE: if you set \code{col.lim} when \code{is.corr} is \code{TRUE}, the assigning color
-#'   method is still distributed uniformly in [-1, 1], it only affect the display
+#'   NOTICE: if you set \code{col.lim} when \code{is.corr} is \code{TRUE}, the assigning colors
+#'   are still distributed uniformly in [-1, 1], it only affect the display
 #'   on color-legend.
 #'
 #'
@@ -371,13 +371,18 @@ corrplot = function(corr,
     c_max = max(corr, na.rm = TRUE)
     c_min = min(corr, na.rm = TRUE)
 
+    if((col.lim[1] > c_min) | (col.lim[2] < c_max))
+    {
+      stop('Wrong color: matrix should be in col.lim interval!')
+    }
+
     if(diff(col.lim)/(c_max - c_min)> 2) {
       warning('col.lim interval too wide, please set a suitable value')
     }
 
     # all negative or positive, trans to [0, 1]
     if (c_max <= 0 | c_min>=0) {
-      intercept = -c_min
+      intercept = - col.lim[1]
       zoom = 1 / (diff(col.lim))
 
 
@@ -405,6 +410,9 @@ corrplot = function(corr,
 
     corr = (intercept + corr) * zoom
   }
+
+
+
 
   col.lim2 = (intercept + col.lim) * zoom
   int = intercept * zoom
@@ -1044,7 +1052,7 @@ corrplot = function(corr,
   invisible(res) # reordered correlation matrix, and Position
 }
 
-#' @note pure function
+
 #' @noRd
 draw_method_square = function(coords, values, asp_rescale_factor, fg, bg) {
   symbols(coords, add = TRUE, inches = FALSE,
@@ -1052,14 +1060,14 @@ draw_method_square = function(coords, values, asp_rescale_factor, fg, bg) {
           bg = bg, fg = fg)
 }
 
-#' @note pure function
+
 #' @noRd
 draw_method_color = function(coords, fg, bg) {
   symbols(coords, squares = rep(1, nrow(coords)), fg = fg, bg = bg,
           add = TRUE, inches = FALSE)
 }
 
-#' @note pure function
+
 #' @noRd
 draw_grid = function(coords, fg) {
   symbols(coords, add = TRUE, inches = FALSE, fg = fg, bg = NA,

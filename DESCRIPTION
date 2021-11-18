@@ -1,7 +1,7 @@
 Package: corrplot
 Type: Package
 Title: Visualization of a Correlation Matrix
-Version: 0.91
+Version: 0.92
 Date: 2021-11-11
 Authors@R: c(
   person('Taiyun', 'Wei', email = 'weitaiyun@gmail.com', role = c('cre', 'aut')),
@@ -24,7 +24,7 @@ BugReports: https://github.com/taiyun/corrplot/issues
 VignetteBuilder: knitr
 RoxygenNote: 7.1.1
 NeedsCompilation: no
-Packaged: 2021-11-10 08:39:14 UTC; LT-0849
+Packaged: 2021-11-18 12:31:22 UTC; taiyun
 Author: Taiyun Wei [cre, aut],
   Viliam Simko [aut],
   Michael Levy [ctb],
@@ -35,4 +35,4 @@ Author: Taiyun Wei [cre, aut],
   Jun Cai [ctb],
   Tomas Protivinsky [ctb]
 Repository: CRAN
-Date/Publication: 2021-11-10 09:40:02 UTC
+Date/Publication: 2021-11-18 13:20:02 UTC
