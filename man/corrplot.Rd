@@ -10,9 +10,9 @@ corrplot(
   type = c("full", "lower", "upper"),
   col = NULL,
   col.lim = NULL,
+  is.corr = TRUE,
   bg = "white",
   title = "",
-  is.corr = TRUE,
   add = FALSE,
   diag = TRUE,
   outline = FALSE,
@@ -43,6 +43,7 @@ corrplot(
   addshade = c("negative", "positive", "all"),
   shade.lwd = 1,
   shade.col = "white",
+  transKeepSign = TRUE,
   p.mat = NULL,
   sig.level = 0.05,
   insig = c("pch", "p-value", "blank", "n", "label_sig"),
@@ -96,13 +97,13 @@ the default value will be \code{COL2('RdBu', 200)}.}
   are still distributed uniformly in [-1, 1], it only affect the display
   on color-legend.}
 
-\item{bg}{The background color.}
-
-\item{title}{Character, title of the graph.}
-
 \item{is.corr}{Logical, whether the input matrix is a correlation matrix or
 not. We can visualize the non-correlation matrix by setting
 \code{is.corr = FALSE}.}
+
+\item{bg}{The background color.}
+
+\item{title}{Character, title of the graph.}
 
 \item{add}{Logical, if \code{TRUE}, the graph is added to an existing plot,
 otherwise a new plot will be created.}
@@ -214,6 +215,12 @@ negative.}
 \item{shade.lwd}{Numeric, the line width of shade.}
 
 \item{shade.col}{The color of shade line.}
+
+\item{transKeepSign}{Logical, whether or not to keep matrix values' sign when
+  transforming non-corr matrix for plotting.
+  Only valid when \code{is.corr = FALSE}. The default value is \code{TRUE}.
+
+  NOTE: If \code{FALSE},the non-corr matrix will be}
 
 \item{p.mat}{Matrix of p-value, if \code{NULL}, parameter \code{sig.level},
 \code{insig}, \code{pch}, \code{pch.col}, \code{pch.cex} are invalid.}

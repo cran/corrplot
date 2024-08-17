@@ -58,15 +58,17 @@ corrplot.mixed = function(
 
   # fixed issue #102
   # restore this parameter when exiting the corrplot.mixed function in any way
-  oldpar = par(mar = mar, bg = 'white')
+  oldpar = par(mar = mar, bg = par()$bg)
   on.exit(par(oldpar), add = TRUE)
 
   corrplot(corr, type = 'upper', method = upper, diag = TRUE,
            tl.pos = tl.pos, plotCI = plotCI_upper,
+           bg = bg, addgrid.col = addgrid.col,
            col = upper.col, mar = mar, ...) -> res1
 
   corrplot(corr, add = TRUE, type = 'lower', method = lower,
            diag = (diag == 'l'),
+           bg = bg, addgrid.col = addgrid.col,
            tl.pos = 'n', cl.pos = 'n', plotCI = plotCI_lower,
            col = lower.col, mar = mar, ...) -> res2
 

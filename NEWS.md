@@ -1,3 +1,18 @@
+# corrplot 0.94
+
+## Changes
+
+  *  Fix #275: format correlations with `nsmall = number.digits`. (thanks, @the-mad-statter)
+
+  
+# corrplot 0.93
+
+## Changes
+
+  *  Fix #247: `addgrid.col` and `bg` don't work in mixed plot. (thanks, @ZoomMan91)
+  *  Fix #246: using `insig = "n"` and `p.mat` sometimes causes an error. (thanks, @Sumidu)
+  *  Fix #255: add new parameter `transKeepSign`, whether or not to keep matrix values' sign when transforming non-corr matrix.
+
 # corrplot 0.92
 
 ## Changes
